@@ -36,7 +36,7 @@ app_license = "mit"
 # website_theme_scss = "tekma_app/public/scss/website"
 
 # include js, css files in header of web form
-# webform_include_js = {"doctype": "public/js/doctype.js"}
+# webform_include_js = {"Sales Order": "public/js/sales_order.js"}
 # webform_include_css = {"doctype": "public/css/doctype.css"}
 
 # include js in page
@@ -44,6 +44,7 @@ app_license = "mit"
 
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {"Sales Order": "public/js/sales_order.js", "Delivery Note": "public/js/delivery_note.js", "Sales Invoice": "public/js/sales_invoice.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -197,7 +198,7 @@ app_license = "mit"
 # Request Events
 # ----------------
 # before_request = ["tekma_app.utils.before_request"]
-# after_request = ["tekma_app.utils.after_request"]
+after_migrate = ["tekma_app.install.update_fields"]
 
 # Job Events
 # ----------
