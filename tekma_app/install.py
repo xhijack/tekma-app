@@ -39,7 +39,13 @@ def update_fields():
                 'fieldtype': 'Button',
                 'insert_after': 'item_code'
                
-            },
+            },{
+                'fieldname': 'Tiang',
+                'label': 'Tiang',
+                'fieldtype': 'Select',
+                'options': '\nDengan Tiang\nTanpa Tiang\nTukar Tiang',
+                'insert_after': 'check_price'
+            }
         ],
         'Sales Invoice': [
             {
@@ -51,6 +57,66 @@ def update_fields():
             },
         ],
         'Sales Invoice Item': [
+            {
+                'fieldname': 'check_price',
+                'label': 'Check Price',
+                'fieldtype': 'Button',
+                'insert_after': 'item_code'
+               
+            },{
+                'fieldname': 'Tiang',
+                'label': 'Tiang',
+                'fieldtype': 'Select',
+                'options': '\nDengan Tiang\nTanpa Tiang\nTukar Tiang',
+                'insert_after': 'check_price'
+            }
+        ],
+        'Purchase Order': [
+            {
+                'fieldname': 'current_outstanding',
+                'label': 'Current Outstanding',
+                'fieldtype': 'Currency',
+                'insert_after': 'supplier',
+                'read_only': 1,
+            },
+        ],
+        'Purchase Order Item': [
+            {
+                'fieldname': 'check_price',
+                'label': 'Check Price',
+                'fieldtype': 'Button',
+                'insert_after': 'item_code'
+               
+            },
+        ],
+        'Purchase Receipt': [
+            {
+                'fieldname': 'current_outstanding',
+                'label': 'Current Outstanding',
+                'fieldtype': 'Currency',
+                'insert_after': 'supplier',
+                'read_only': 1,
+            },
+        ],
+        'Purchase Receipt Item': [
+            {
+                'fieldname': 'check_price',
+                'label': 'Check Price',
+                'fieldtype': 'Button',
+                'insert_after': 'item_code'
+               
+            },
+        ],
+        'Purchase Invoice': [
+            {
+                'fieldname': 'current_outstanding',
+                'label': 'Current Outstanding',
+                'fieldtype': 'Currency',
+                'insert_after': 'supplier',
+                'read_only': 1,
+            },
+        ],
+        'Purchase Invoice Item': [
             {
                 'fieldname': 'check_price',
                 'label': 'Check Price',
