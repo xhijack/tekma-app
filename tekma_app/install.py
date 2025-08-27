@@ -124,6 +124,14 @@ def update_fields():
                 'insert_after': 'item_code'
                
             },
+        ],
+        "Stock Entry": [
+            {
+                'fieldname': 'doc_reference',
+                'label': 'Doc Reference',
+                'fieldtype': 'Data',
+                'insert_after': 'to_warehouse'
+            }
         ]
     }
 

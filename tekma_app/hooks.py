@@ -138,13 +138,16 @@ doctype_js = {"Sales Order": "public/js/sales_order.js", "Delivery Note": "publi
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+	"Delivery Note": {
+		"on_submit": "tekma_app.utils.delivery_note_on_submit",
+        "on_cancel": "tekma_app.utils.delivery_note_on_cancel"
+	},
+    "Sales Invoice": {
+        "on_submit": "tekma_app.utils.sales_invoice_on_submit",
+		"on_cancel": "tekma_app.utils.sales_invoice_on_cancel"
+	}
+}
 
 # Scheduled Tasks
 # ---------------
