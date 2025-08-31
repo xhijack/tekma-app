@@ -52,3 +52,37 @@ def sales_invoice_on_submit(doc, method):
 def sales_invoice_on_cancel(doc, method):
     if doc.update_stock:
         cancel_stock_entry(doc)
+
+def validate_ratio_for_valuation_rate_stock_entry(doc):
+    total_ratio = 0
+    for item in doc.items:
+        item_detail = frappe.get_doc("Item", item.item_code)
+        if item_detail.ratio != 0 and item.is_finished_item:
+            total_ratio += item_detail.ratio * item.qty
+
+    for item in doc.items:
+        item_detail = frappe.get_doc("Item", item.item_code)
+        if item_detail.ratio != 0 and item.is_finished_item:
+            item.basic_rate = (doc.total_outgoing_value / total_ratio) * item_detail.ratio
+
+
+def calculate_basic_rate(docname):
+    doc = frappe.get_doc("Stock Entry", docname)
+    respond = []
+    total_ratio = 0
+    for item in doc.items:
+        item_detail = frappe.get_doc("Item", item.item_code)
+        if item_detail.ratio != 0 and item.is_finished_item:
+            total_ratio += item_detail.ratio * item.qty
+
+    for item in doc.items:
+        item_detail = frappe.get_doc("Item", item.item_code)
+        if item_detail.ratio != 0 and item.is_finished_item:
+            item.basic_rate = (doc.total_outgoing_value / total_ratio) * item_detail.ratio
+            respond.append({'item_code': item.item_code, 'basic_rate': item.basic_rate})
+    
+    return respond
+
+def stock_entry_on_validate(doc, method):
+    pass
+    # validate_ratio_for_valuation_rate_stock_entry(doc)

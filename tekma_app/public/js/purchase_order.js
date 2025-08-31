@@ -56,9 +56,7 @@ function open_ap_dialog(frm) {
   });
 
   d.show();
-
-  // perlebar dialog
-  try { d.$wrapper.find('.modal-dialog').css({ 'max-width': '1200px', 'width': '95%' }); } catch (e) {}
+  try { d.$wrapper.find('.modal-dialog').css({ 'max-width': '1400px', 'width': '95%' }); } catch (e) {}
 
   const $wrap = d.get_field('ap_html').$wrapper;
   $wrap.html(`<div class="text-muted">${__('Memuat data...')}</div>`);
@@ -69,79 +67,177 @@ function open_ap_dialog(frm) {
     callback: (r) => {
       const payload = (r && r.message) ? r.message : {};
       const currency = payload.currency || frm.doc.currency || frappe.defaults.get_default('currency') || 'IDR';
+
       const invoices = payload.invoices || [];
-      const totals = payload.totals || { grand_total: 0, paid_amount: 0, outstanding_amount: 0 };
+      const totals = payload.totals || { grand_total: 0, paid_amount: 0, outstanding_amount: 0, applied_credit_from_returns: 0 };
+      const xadj = payload.totals_adjusted || { invoices_outstanding_adjusted: 0 };
+      const credit_notes = payload.credit_notes || [];
+      const advances = payload.advances || [];
+      const x = payload.totals_extended || {
+        invoices_outstanding_adjusted: 0,
+        credit_note_available: 0,
+        advance_unallocated: 0,
+        net_payable: 0
+      };
+
       const fmt = (v) => format_currency(v || 0, currency);
 
-      // style kecil
       const style = `
         <style>
           .ap-dialog { font-size: 12px; }
           .ap-dialog table.table th,
           .ap-dialog table.table td { padding: 4px 8px; vertical-align: middle; }
+          .ap-section-title { margin: 8px 0; font-weight: 600; }
+          .ap-summary .row { display: flex; gap: 16px; flex-wrap: wrap; }
+          .ap-summary .box { padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fafafa; }
+          .muted { color: #6b7280; font-size: 11px; }
         </style>
       `;
 
-      const header = `
+      // Invoices (Adjusted Outstanding)
+      const inv_header = `
         <thead>
           <tr>
             <th style="text-align:center;width:50px">No</th>
             <th style="text-align:left;width:120px">${__('Tanggal Invoice')}</th>
             <th style="text-align:left">${__('Nomor Invoice')}</th>
+            <th style="text-align:left;width:220px">${__('Remarks')}</th>
             <th style="text-align:right;width:140px">${__('Grand Total')}</th>
             <th style="text-align:right;width:140px">${__('Paid Amount')}</th>
-            <th style="text-align:right;width:140px">${__('Outstanding')}</th>
+            <th style="text-align:right;width:180px">${__('Outstanding (Adjusted)')}</th>
           </tr>
         </thead>
       `;
 
-      let rows_html = '';
+      let inv_rows = '';
       invoices.forEach((inv, idx) => {
-        rows_html += `
+        const applied_note = (inv.applied_credit && inv.applied_credit > 0)
+          ? `<div class="muted">(- ${__('Credit Note')} ${fmt(inv.applied_credit)})</div>` : '';
+        inv_rows += `
           <tr>
             <td style="text-align:center">${idx + 1}</td>
             <td>${frappe.datetime.str_to_user(inv.posting_date)}</td>
-            <td>
-              <a href="/app/purchase-invoice/${encodeURIComponent(inv.name)}" target="_blank" rel="noopener">
-                ${frappe.utils.escape_html(inv.name)}
-              </a>
-            </td>
+            <td><a href="/app/purchase-invoice/${encodeURIComponent(inv.name)}" target="_blank" rel="noopener">${frappe.utils.escape_html(inv.name)}</a></td>
+            <td>${frappe.utils.escape_html(inv.remarks || '')}</td>
             <td style="text-align:right">${fmt(inv.grand_total)}</td>
             <td style="text-align:right">${fmt(inv.paid_amount)}</td>
-            <td style="text-align:right"><b>${fmt(inv.outstanding_amount)}</b></td>
+            <td style="text-align:right"><b>${fmt(inv.adjusted_outstanding)}</b>${applied_note}</td>
           </tr>
         `;
       });
 
-      const totals_html = `
+      const inv_totals = `
         <tr>
-          <td colspan="3" style="text-align:right"><b>${__('Total')}</b></td>
+          <td colspan="4" style="text-align:right"><b>${__('Total')}</b></td>
           <td style="text-align:right"><b>${fmt(totals.grand_total)}</b></td>
           <td style="text-align:right"><b>${fmt(totals.paid_amount)}</b></td>
-          <td style="text-align:right"><b>${fmt(totals.outstanding_amount)}</b></td>
+          <td style="text-align:right"><b>${fmt(xadj.invoices_outstanding_adjusted)}</b></td>
         </tr>
       `;
 
-      const body_html = `
-        ${style}
-        <div class="ap-dialog" style="overflow:auto; max-height:70vh">
-          <table class="table table-bordered" style="width:100%; background:#fff">
-            ${header}
-            <tbody>
-              ${rows_html || `<tr><td colspan="6" style="text-align:center; color:#888">${__('Tidak ada data')}</td></tr>`}
-              ${totals_html}
-            </tbody>
-          </table>
+      // Credit Notes (Remaining)
+      const cn_header = `
+        <thead>
+          <tr>
+            <th style="text-align:center;width:50px">No</th>
+            <th style="text-align:left;width:120px">${__('Tanggal')}</th>
+            <th style="text-align:left">${__('Credit Note')}</th>
+            <th style="text-align:left;width:160px">${__('Return Against')}</th>
+            <th style="text-align:right;width:160px">${__('Available Credit')}</th>
+          </tr>
+        </thead>
+      `;
+      let cn_rows = '';
+      credit_notes.forEach((cn, idx) => {
+        const ra = cn.return_against
+          ? `<a href="/app/purchase-invoice/${encodeURIComponent(cn.return_against)}" target="_blank" rel="noopener">${frappe.utils.escape_html(cn.return_against)}</a>`
+          : `<span class="muted">-</span>`;
+        cn_rows += `
+          <tr>
+            <td style="text-align:center">${idx + 1}</td>
+            <td>${frappe.datetime.str_to_user(cn.posting_date)}</td>
+            <td><a href="/app/purchase-invoice/${encodeURIComponent(cn.name)}" target="_blank" rel="noopener">${frappe.utils.escape_html(cn.name)}</a></td>
+            <td>${ra}</td>
+            <td style="text-align:right"><b>${fmt(cn.available_amount)}</b></td>
+          </tr>
+        `;
+      });
+
+      // Advances (unallocated)
+      const adv_header = `
+        <thead>
+          <tr>
+            <th style="text-align:center;width:50px">No</th>
+            <th style="text-align:left;width:120px">${__('Tanggal')}</th>
+            <th style="text-align:left">${__('Payment Entry')}</th>
+            <th style="text-align:right;width:160px">${__('Unallocated Amount')}</th>
+          </tr>
+        </thead>
+      `;
+      let adv_rows = '';
+      advances.forEach((pe, idx) => {
+        adv_rows += `
+          <tr>
+            <td style="text-align:center">${idx + 1}</td>
+            <td>${frappe.datetime.str_to_user(pe.posting_date)}</td>
+            <td><a href="/app/payment-entry/${encodeURIComponent(pe.name)}" target="_blank" rel="noopener">${frappe.utils.escape_html(pe.name)}</a></td>
+            <td style="text-align:right"><b>${fmt(pe.unallocated_amount)}</b></td>
+          </tr>
+        `;
+      });
+
+      // Summary
+      const summary_html = `
+        <div class="ap-summary" style="margin-top:8px;">
+          <div class="row">
+            <div class="box">${__('Invoices Outstanding (Adjusted)')}: <b>${fmt(x.invoices_outstanding_adjusted)}</b></div>
+            <div class="box">${__('Credit Note Available (Remaining)')}: <b>${fmt(x.credit_note_available)}</b></div>
+            <div class="box">${__('Advance (Unallocated)')}: <b>${fmt(x.advance_unallocated)}</b></div>
+            <div class="box">${__('Net Payable')}: <b>${fmt(x.net_payable)}</b></div>
+          </div>
         </div>
       `;
 
-      $wrap.html(body_html);
+      const html = `
+        ${style}
+        <div class="ap-dialog" style="overflow:auto; max-height:72vh">
+          <div class="ap-section-title">${__('Purchase Invoices (Outstanding, Adjusted with Returns)')}</div>
+          <table class="table table-bordered" style="width:100%; background:#fff">
+            ${inv_header}
+            <tbody>
+              ${inv_rows || `<tr><td colspan="6" style="text-align:center; color:#888">${__('Tidak ada data')}</td></tr>`}
+              ${inv_rows ? inv_totals : ''}
+            </tbody>
+          </table>
+
+          <div class="ap-section-title">${__('Credit Notes (Remaining)')}</div>
+          <table class="table table-bordered" style="width:100%; background:#fff">
+            ${cn_header}
+            <tbody>
+              ${cn_rows || `<tr><td colspan="5" style="text-align:center; color:#888">${__('Tidak ada credit note tersedia')}</td></tr>`}
+            </tbody>
+          </table>
+
+          <div class="ap-section-title">${__('Advances / Dana Menggantung')}</div>
+          <table class="table table-bordered" style="width:100%; background:#fff">
+            ${adv_header}
+            <tbody>
+              ${adv_rows || `<tr><td colspan="4" style="text-align:center; color:#888">${__('Tidak ada dana menggantung')}</td></tr>`}
+            </tbody>
+          </table>
+
+          ${summary_html}
+        </div>
+      `;
+
+      $wrap.html(html);
     },
     error: () => {
       $wrap.html(`<div class="text-danger">${__('Gagal memuat data.')}</div>`);
     }
   });
 }
+
 
 // ===== Child Table: Purchase Order Item – Check Price =====
 

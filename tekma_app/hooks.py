@@ -44,7 +44,14 @@ app_license = "mit"
 
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
-doctype_js = {"Sales Order": "public/js/sales_order.js", "Delivery Note": "public/js/delivery_note.js", "Sales Invoice": "public/js/sales_invoice.js", "Purchase Order": "public/js/purchase_order.js", "Purchase Receipt": "public/js/purchase_receipt.js", "Purchase Invoice": "public/js/purchase_invoice.js"}
+doctype_js = {"Sales Order": "public/js/sales_order.js", 
+              "Delivery Note": "public/js/delivery_note.js", 
+              "Sales Invoice": "public/js/sales_invoice.js", 
+              "Purchase Order": "public/js/purchase_order.js",
+            "Purchase Receipt": "public/js/purchase_receipt.js",
+            "Purchase Invoice": "public/js/purchase_invoice.js",
+            "Stock Entry": "public/js/stock_entry.js"
+            }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -146,6 +153,9 @@ doc_events = {
     "Sales Invoice": {
         "on_submit": "tekma_app.utils.sales_invoice_on_submit",
 		"on_cancel": "tekma_app.utils.sales_invoice_on_cancel"
+	},
+    "Stock Entry": {
+        "validate": "tekma_app.utils.stock_entry_on_validate"
 	}
 }
 
