@@ -22,6 +22,13 @@ def update_fields():
                 'insert_after': 'item_code'
                
             },
+            {
+                'fieldname': 'Tiang',
+                'label': 'Tiang',
+                'fieldtype': 'Select',
+                'options': '\nDengan Tiang\nTanpa Tiang\nTukar Tiang',
+                'insert_after': 'check_price'
+            }
         ],
         'Delivery Note': [
             {
@@ -186,8 +193,9 @@ def update_fields():
                 "fieldname": "kondisi_bahan",
                 "label": "Kondisi Bahan",
                 "fieldtype": "Select",
-                "options": "Normal\nTemuan",
+                "options": "\nNormal\nTemuan",
                 "insert_after": "durasi",
+                "reqd": 1,
                 "depends_on": 'eval: doc.stock_entry_type=="Flaker" || doc.stock_entry_type=="Mincer" || doc.stock_entry_type=="Mixer"'
             },
             {
@@ -203,6 +211,7 @@ def update_fields():
                 "label": "Ganti Pisau",
                 "fieldtype": "Select",
                 "options": "Ya\nTidak",
+                "default": "Tidak",
                 "insert_after": "kondisi_mesin",
                 "depends_on": 'eval: doc.stock_entry_type=="Flaker" || doc.stock_entry_type=="Mincer" || doc.stock_entry_type=="Mixer"'
             },
@@ -213,6 +222,36 @@ def update_fields():
                 'options': 'Stock Entry',
                 "depends_on": 'eval: doc.stock_entry_type=="Flaker" || doc.stock_entry_type=="Mincer" || doc.stock_entry_type=="Mixer"',
                 "insert_after": "stock_entry_type"
+            },{
+                "fieldname": "employee_log",
+                "label": "Employee Log",
+                "fieldtype": "Table",
+                "options": "Stock Entry Employee Log",
+                "insert_after": "get_stock_and_rate",
+                "depends_on": 'eval: doc.stock_entry_type=="Wrap"'
+            },
+            {
+                "label": "Difference Qty",
+                "fieldname": "difference_qty",
+                "fieldtype": "Float",
+                "insert_after": "employee_log",  
+                "depends_on": 'eval: doc.stock_entry_type=="Wrap"' 
+            },
+            {
+                "fieldname": "Urutan",
+                "label": "Urutan",
+                "fieldtype": "Select",
+                "insert_after": "durasi",
+                "options": "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14",
+                "depends_on": 'eval: doc.stock_entry_type=="Flaker" || doc.stock_entry_type=="Mincer" || doc.stock_entry_type=="Mixer"'
+            },
+            {
+                "fieldname": "suhu_adonan",
+                "label": "Suhu Adonan",
+                "fieldtype": "Float",
+                "insert_after": "Urutan",
+                "depends_on": 'eval: doc.stock_entry_type=="Wrap"',
+                "reqd": 1
             }
         ],
         'Item' : [    
@@ -222,6 +261,15 @@ def update_fields():
                 'fieldtype': 'Float',
                 'insert_after': 'stock_uom',
                 'default': 0,  
+            }
+        ],
+        'BOM' : [  
+            {
+                'fieldname': 'production_type',
+                'label': 'Production Type',
+                'fieldtype': 'Select',
+                'insert_after': 'item',
+                'options': '\nFlaker\nMincer\nMixer\nWrap'
             }
         ]
     }
