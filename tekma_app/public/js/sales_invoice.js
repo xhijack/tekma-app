@@ -5,12 +5,18 @@ frappe.ui.form.on('Sales Invoice', {
     // Tambahkan tombol hanya jika tidak sedang loading dan outstanding > 0
     if (!frm._ar_loading && Number(frm.doc.current_outstanding || 0) > 0) {
       frm.add_custom_button(__('Lihat Piutang'), () => open_ar_dialog(frm));
+      if (frm.doc.customer) {
+        frm.add_custom_button(__('History Tiang'), () => open_tiang_history_dialog(frm));
+      }
     }
   },
 
   customer(frm) {
     frm._ar_loading = true;
     fetch_ar_summary(frm);
+    if (frm.doc.customer) {
+      frm.add_custom_button(__('History Tiang'), () => open_tiang_history_dialog(frm));
+    }
   },
 
   company(frm) {
@@ -102,7 +108,7 @@ function open_ar_dialog(frm) {
         <thead>
           <tr>
             <th style="text-align:center;width:50px">No</th>
-            <th style="text-align:left;width:120px">${__('Tanggal Invoice')}</th>
+            <th style="text-align:left;width:200px">${__('Tanggal Invoice')}</th>
             <th style="text-align:left">${__('Nomor Invoice')}</th>
             <th style="text-align:left;width:220px">${__('Remarks')}</th>
             <th style="text-align:right;width:140px">${__('Grand Total')}</th>
@@ -143,7 +149,7 @@ function open_ar_dialog(frm) {
         <thead>
           <tr>
             <th style="text-align:center;width:50px">No</th>
-            <th style="text-align:left;width:120px">${__('Tanggal')}</th>
+            <th style="text-align:left;width:200px">${__('Tanggal')}</th>
             <th style="text-align:left">${__('Credit Note')}</th>
             <th style="text-align:left;width:160px">${__('Return Against')}</th>
             <th style="text-align:right;width:160px">${__('Available Credit')}</th>
@@ -171,7 +177,7 @@ function open_ar_dialog(frm) {
         <thead>
           <tr>
             <th style="text-align:center;width:50px">No</th>
-            <th style="text-align:left;width:120px">${__('Tanggal')}</th>
+            <th style="text-align:left;width:200px">${__('Tanggal')}</th>
             <th style="text-align:left">${__('Payment Entry')}</th>
             <th style="text-align:right;width:160px">${__('Unallocated Amount')}</th>
           </tr>
@@ -330,7 +336,7 @@ function open_item_price_dialog(frm, row) {
           <thead>
             <tr>
               <th style="text-align:center;width:50px">No</th>
-              <th style="text-align:left;width:120px">${__('Tanggal Invoice')}</th>
+              <th style="text-align:left;width:200px">${__('Tanggal Invoice')}</th>
               <th style="text-align:left">${__('Nomor Invoice')}</th>
               <th style="text-align:right;width:90px">${__('Qty')}</th>
               <th style="text-align:left;width:80px">${__('UOM')}</th>
@@ -389,5 +395,127 @@ function open_item_price_dialog(frm, row) {
   });
 
   // Initial load with default 20
+  load(20);
+}
+
+function open_tiang_history_dialog(frm) {
+  const { customer } = frm.doc || {};
+  if (!customer) {
+    frappe.msgprint({ message: __('Customer belum dipilih.'), indicator: 'orange' });
+    return;
+  }
+
+  const d = new frappe.ui.Dialog({
+    title: __('History Tiang • {0}', [frappe.utils.escape_html(customer)]),
+    size: 'large',
+    fields: [
+      { fieldtype: 'HTML', fieldname: 'controls_html' },
+      { fieldtype: 'HTML', fieldname: 'body_html' }
+    ],
+    primary_action_label: __('Tutup'),
+    primary_action() { d.hide(); },
+  });
+
+  d.show();
+  try { d.$wrapper.find('.modal-dialog').css({ 'max-width': '1200px', 'width': '95%' }); } catch (e) {}
+
+  const $controls = d.get_field('controls_html').$wrapper;
+  const $wrap = d.get_field('body_html').$wrapper;
+
+  const controlHtml = `
+    <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;align-items:center">
+      <div class="text-muted" style="font-size:11px">${__('Menampilkan riwayat dari Doctype')} <b>History Tiang</b></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="text-muted" style="font-size:11px">${__('Tampilkan')}</span>
+        <select class="form-control input-sm" style="width:auto" data-role="page-size">
+          <option value="20" selected>20</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="500">500</option>
+        </select>
+        <span class="text-muted" style="font-size:11px">${__('baris')}</span>
+      </div>
+    </div>
+  `;
+  $controls.html(controlHtml);
+
+  async function load(limit = 20) {
+    $wrap.html(`<div class="text-muted">${__('Memuat data...')}</div>`);
+
+    try {
+      const rows = await frappe.db.get_list('History Tiang', {
+        filters: { customer },
+        fields: ['name', 'posting_date', 'document_type', 'document', 'qty', 'docstatus'],
+        order_by: 'posting_date desc, creation desc',
+        limit: limit
+      });
+
+      const style = `
+        <style>
+          .tiang-dialog { font-size: 12px; }
+          .tiang-dialog table.table th, .tiang-dialog table.table td { padding: 4px 8px; vertical-align: middle; }
+          .muted { color: #6b7280; font-size: 11px; }
+        </style>
+      `;
+
+      const header = `
+        <thead>
+          <tr>
+            <th style="text-align:center;width:50px">No</th>
+            <th style="text-align:left;width:200px">${__('Tanggal')}</th>
+            <th style="text-align:left;width:140px">${__('Document Type')}</th>
+            <th style="text-align:left">${__('Document')}</th>
+            <th style="text-align:right;width:100px">${__('Qty')}</th>
+            <th style="text-align:center;width:90px">${__('Status')}</th>
+          </tr>
+        </thead>
+      `;
+
+      let body_rows = '';
+      rows.forEach((r, i) => {
+        const dt = r.document_type || '';
+        const dn = r.document || '';
+        const route_dt = (dt || '').toLowerCase().replace(/\s+/g, '-');
+        const doc_link = (dt && dn)
+          ? `<a href="/app/${route_dt}/${encodeURIComponent(dn)}" target="_blank" rel="noopener">${frappe.utils.escape_html(dn)}</a>`
+          : '<span class="muted">-</span>';
+        const status = r.docstatus === 1 ? __('Submitted') : (r.docstatus === 2 ? __('Cancelled') : __('Draft'));
+        body_rows += `
+          <tr>
+            <td style="text-align:center">${i + 1}</td>
+            <td>${frappe.datetime.str_to_user(r.posting_date)}</td>
+            <td>${frappe.utils.escape_html(dt)}</td>
+            <td>${doc_link}</td>
+            <td style="text-align:right">${frappe.format(r.qty || 0, { fieldtype: 'Float' })}</td>
+            <td style="text-align:center">${status}</td>
+          </tr>
+        `;
+      });
+
+      const html = `
+        ${style}
+        <div class="tiang-dialog" style="overflow:auto; max-height:70vh">
+          <table class="table table-bordered" style="width:100%; background:#fff">
+            ${header}
+            <tbody>
+              ${body_rows || `<tr><td colspan="6" style="text-align:center; color:#888">${__('Tidak ada data')}</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+        <div class="mt-2 text-muted">${__('Baris ditampilkan')}: ${rows.length} • ${__('Batas')}: ${limit}</div>
+      `;
+
+      $wrap.html(html);
+    } catch (err) {
+      console.error(err);
+      $wrap.html(`<div class="text-danger">${__('Gagal memuat data.')}</div>`);
+    }
+  }
+
+  $controls.find('select[data-role="page-size"]').on('change', function () {
+    const val = parseInt($(this).val(), 10) || 20;
+    load(val);
+  });
+
   load(20);
 }

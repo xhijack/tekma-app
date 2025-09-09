@@ -5,6 +5,21 @@ frappe.ui.form.on('Stock Entry', {
 
   stock_entry_type(frm) {
     apply_prod_reference_query(frm);
+    if (frm.doc.stock_entry_type === 'Mincer' || frm.doc.stock_entry_type === 'Mixer' || frm.doc.stock_entry_type === 'Flaker') {
+      frm.doc.from_bom = 1;
+      frm.doc.use_multi_level_bom = 0
+      frm.refresh_field('from_bom');
+      
+      frm.set_query('bom_no', function() {
+      return {
+        filters: {
+          production_type: frm.doc.stock_entry_type,
+          docstatus: 1  // Only submitted documents
+        }
+      };
+    });
+      
+    }
   }
 });
 
