@@ -63,7 +63,7 @@ def update_fields():
                 'fieldname': 'delivery_method',
                 'label': 'Delivery Method',
                 'fieldtype': 'Data',
-                'insert_after': 'due_date',
+                'insert_after': 'pic',
             },
             
         ],

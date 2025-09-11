@@ -138,7 +138,7 @@ frappe.query_reports["Daily Sales Report"] = {
                             <table>
                                 <thead>
                                     <th>AR Pelanggan ✍️</th>
-                                    <th>Rp</th>
+                                    <th style="width:25%;">Rp</th>
                                     <th>Lapor Finance</th>
                                 </thead>
                                 <tbody>
