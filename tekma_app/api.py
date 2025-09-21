@@ -463,3 +463,101 @@ def get_item_cost_history(company, item_code, supplier=None, limit=100):
         "count": len(rows),
         "rows": rows,
     }
+
+# tekma_app/utils.py
+import frappe
+from decimal import Decimal, ROUND_HALF_UP
+
+def _compute_valuation_rates_core(finished_items, total_rm_cost, rounding=0):
+    total_rm_cost = Decimal(total_rm_cost)
+    total_ratio_units = Decimal(0)
+
+    normalized = []
+    for it in finished_items:
+        qty = Decimal(it.get("qty") or 0)
+        ratio = Decimal(it.get("ratio") or 1)
+        if qty <= 0 or ratio <= 0:
+            frappe.throw(f"Qty/Ratio harus > 0 untuk item {it.get('item_code')}")
+        ru = qty * ratio
+        total_ratio_units += ru
+        normalized.append({**it, "qty": qty, "ratio": ratio, "ratio_units": ru})
+
+    if total_ratio_units == 0:
+        frappe.throw("Total ratio units = 0, tidak bisa membagi biaya")
+
+    cost_per_ratio_unit = (total_rm_cost / total_ratio_units)
+    quantize_str = "1" if rounding == 0 else f"1.{'0'*rounding}"
+
+    result = {}
+    for it in normalized:
+        valuation_per_unit = (cost_per_ratio_unit * it["ratio"]).quantize(Decimal(quantize_str), rounding=ROUND_HALF_UP)
+        total_cost_for_item = (valuation_per_unit * it["qty"]).quantize(Decimal(quantize_str), rounding=ROUND_HALF_UP)
+        result[it["item_code"]] = {
+            "qty": float(it["qty"]),
+            "ratio": float(it["ratio"]),
+            "valuation_rate": float(valuation_per_unit),
+            "total_cost": float(total_cost_for_item),
+        }
+
+    sum_allocated = sum(v["total_cost"] for v in result.values())
+    result["_meta"] = {
+        "total_rm_cost": float(total_rm_cost),
+        "sum_allocated": float(sum_allocated),
+        "difference": float(total_rm_cost - Decimal(str(sum_allocated))),
+    }
+    return result
+
+
+@frappe.whitelist()
+def compute_valuation_rates(doc=None, rounding: int = 0):
+    """
+    Dipanggil dari client (Stock Entry).
+    - Ambil RM (baris dengan s_warehouse terisi & t_warehouse kosong)
+    - Ambil FG (baris dengan t_warehouse terisi & s_warehouse kosong)
+    - Ambil 'ratio' dari child (gunakan field 'ratio' atau 'custom_ratio', default 1)
+    - Hitung valuation_rate FG secara proporsional ratio × qty
+    Return:
+      { item_code: {qty, ratio, valuation_rate, total_cost}, _meta: {...} }
+    """
+    if not doc:
+        frappe.throw("Parameter doc wajib diisi")
+    doc = frappe.parse_json(doc)
+
+    items = (doc.get("items") or [])
+    # Raw Materials = keluar gudang (s_warehouse ada), bukan masuk (t_warehouse kosong)
+    rm_rows = [d for d in items if d.get("s_warehouse") and not d.get("t_warehouse")]
+    # Finished Goods = masuk gudang (t_warehouse ada), bukan keluar (s_warehouse kosong)
+    fg_rows = [d for d in items if d.get("t_warehouse") and not d.get("s_warehouse")]
+
+    if not rm_rows:
+        frappe.throw("Tidak ditemukan baris Raw Material (baris dengan s_warehouse terisi).")
+    if not fg_rows:
+        frappe.throw("Tidak ditemukan baris Finished Goods (baris dengan t_warehouse terisi).")
+
+    # Hitung total biaya RM (qty * basic_rate/valuation_rate)
+    total_rm_cost = 0.0
+    for r in rm_rows:
+        qty = float(r.get("qty") or 0)
+        rate = r.get("basic_rate")
+        if rate in (None, "", 0):
+            rate = r.get("valuation_rate") or 0
+        total_rm_cost += qty * float(rate or 0)
+
+    if total_rm_cost <= 0:
+        frappe.throw("Total biaya Raw Material = 0. Pastikan basic_rate/valuation_rate RM terisi.")
+
+    # Siapkan list FG dengan ratio
+    finished_items = []
+    for r in fg_rows:
+        ratio = r.get("ratio", r.get("custom_ratio", 1))  # dukung custom field
+        finished_items.append({
+            "item_code": r.get("item_code"),
+            "qty": r.get("qty"),
+            "ratio": ratio,
+        })
+
+    return _compute_valuation_rates_core(
+        finished_items=finished_items,
+        total_rm_cost=total_rm_cost,
+        rounding=int(rounding or 0),
+    )

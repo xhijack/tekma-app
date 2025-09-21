@@ -252,6 +252,13 @@ def update_fields():
                 "insert_after": "Urutan",
                 "depends_on": 'eval: doc.stock_entry_type=="Wrap"',
                 "reqd": 1
+            },
+            {
+                "fieldname": "update_ratio_valuation_rate",
+                "fieldtype": "Button",
+                "label": "Update Ratio Valuation Rate",
+                "insert_after": "get_stock_and_rate"
+                
             }
         ],
         'Item' : [    
