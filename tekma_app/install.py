@@ -7,12 +7,20 @@ def update_fields():
     custom_fields = {
         'Sales Order': [
             {
+                'fieldname': 'pic',
+                'label': 'PIC',
+                'fieldtype': 'Link',
+                'options': 'Employee',
+                'insert_after': 'customer',
+            },
+            {
                 'fieldname': 'current_outstanding',
                 'label': 'Current Outstanding',
                 'fieldtype': 'Currency',
-                'insert_after': 'customer',
+                'insert_after': 'pic',
                 'read_only': 1,
             },
+            
         ],
         'Sales Order Item': [
             {
@@ -32,12 +40,32 @@ def update_fields():
         ],
         'Delivery Note': [
             {
+                'fieldname': 'pic',
+                'label': 'PIC',
+                'fieldtype': 'Link',
+                'options': 'Employee',
+                'insert_after': 'customer',
+            },
+            {
                 'fieldname': 'current_outstanding',
                 'label': 'Current Outstanding',
                 'fieldtype': 'Currency',
                 'insert_after': 'customer',
                 'read_only': 1,
             },
+            {
+                'fieldname': 'remarks',
+                'label': 'Remarks',
+                'fieldtype': 'Small Text',
+                'insert_after': 'is_return',
+            },
+            {
+                'fieldname': 'delivery_method',
+                'label': 'Delivery Method',
+                'fieldtype': 'Data',
+                'insert_after': 'pic',
+            },
+            
         ],
         'Delivery Note Item': [
             {
@@ -56,10 +84,17 @@ def update_fields():
         ],
         'Sales Invoice': [
             {
+                'fieldname': 'pic',
+                'label': 'PIC',
+                'fieldtype': 'Link',
+                'options': 'Employee',
+                'insert_after': 'customer',
+            },
+            {
                 'fieldname': 'current_outstanding',
                 'label': 'Current Outstanding',
                 'fieldtype': 'Currency',
-                'insert_after': 'customer',
+                'insert_after': 'pic',
                 'read_only': 1,
             },
         ],
