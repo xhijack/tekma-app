@@ -1,3 +1,5 @@
+// Client Script: Sales Order
+
 frappe.ui.form.on('Delivery Note', {
   
 
@@ -5,10 +7,12 @@ frappe.ui.form.on('Delivery Note', {
     // Tambahkan tombol hanya jika tidak sedang loading dan outstanding > 0
     if (!frm._ar_loading && Number(frm.doc.current_outstanding || 0) > 0) {
       frm.add_custom_button(__('Lihat Piutang'), () => open_ar_dialog(frm));
-      if (frm.doc.customer) {
-        frm.add_custom_button(__('History Tiang'), () => open_tiang_history_dialog(frm));
-      }
     }
+
+    if (frm.doc.customer) {
+      frm.add_custom_button(__('History Tiang'), () => open_tiang_history_dialog(frm));
+    }
+
   },
 
   customer(frm) {
@@ -248,6 +252,7 @@ function open_ar_dialog(frm) {
 }
 
 
+// === Tambahan: handler di child table Sales Order Item ===
 frappe.ui.form.on('Delivery Note Item', {
   check_price(frm, cdt, cdn) {
     const row = locals[cdt][cdn];
@@ -445,7 +450,7 @@ function open_tiang_history_dialog(frm) {
     try {
       const rows = await frappe.db.get_list('History Tiang', {
         filters: { customer },
-        fields: ['name', 'posting_date', 'document_type', 'document', 'qty', 'docstatus'],
+        fields: ['name', 'posting_date', 'document_type', 'document', 'qty','condition','docstatus'],
         order_by: 'posting_date desc, creation desc',
         limit: limit
       });
@@ -466,6 +471,7 @@ function open_tiang_history_dialog(frm) {
             <th style="text-align:left;width:140px">${__('Document Type')}</th>
             <th style="text-align:left">${__('Document')}</th>
             <th style="text-align:right;width:100px">${__('Qty')}</th>
+            <th style="text-align:right;width:100px">${__('Condition')}</th>
             <th style="text-align:center;width:90px">${__('Status')}</th>
           </tr>
         </thead>
@@ -487,6 +493,7 @@ function open_tiang_history_dialog(frm) {
             <td>${frappe.utils.escape_html(dt)}</td>
             <td>${doc_link}</td>
             <td style="text-align:right">${frappe.format(r.qty || 0, { fieldtype: 'Float' })}</td>
+            <td style="text-align:center">${r.condition}</td>
             <td style="text-align:center">${status}</td>
           </tr>
         `;
