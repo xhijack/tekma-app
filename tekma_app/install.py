@@ -36,6 +36,12 @@ def update_fields():
                 'fieldtype': 'Select',
                 'options': '\nDengan Tiang\nTanpa Tiang\nTukar Tiang',
                 'insert_after': 'check_price'
+            },{
+                'fieldname': 'tiang_rate',
+                'fieldtype': 'Currency',
+                'insert_after': 'Tiang',
+                'label': 'Tiang Rate',
+                'default': 0,
             }
         ],
         'Delivery Note': [
@@ -80,6 +86,12 @@ def update_fields():
                 'fieldtype': 'Select',
                 'options': '\nDengan Tiang\nTanpa Tiang\nTukar Tiang',
                 'insert_after': 'check_price'
+            },{
+                'fieldname': 'tiang_rate',
+                'fieldtype': 'Currency',
+                'insert_after': 'Tiang',
+                'label': 'Tiang Rate',
+                'default': 0,
             }
         ],
         'Sales Invoice': [
@@ -111,6 +123,12 @@ def update_fields():
                 'fieldtype': 'Select',
                 'options': '\nDengan Tiang\nTanpa Tiang\nTukar Tiang',
                 'insert_after': 'check_price'
+            },{
+                'fieldname': 'tiang_rate',
+                'fieldtype': 'Currency',
+                'insert_after': 'Tiang',
+                'label': 'Tiang Rate',
+                'default': 0,
             }
         ],
         'Purchase Order': [
@@ -211,16 +229,14 @@ def update_fields():
             {
                 "fieldname": "durasi_keseluruhan",
                 "label": "Durasi Keseluruhan",
-                "fieldtype": "Int",
+                "fieldtype": "Timer",
                 "insert_after": "kode_bak",
-                "default": 1,
                 "depends_on": 'eval: doc.stock_entry_type=="Flaker" || doc.stock_entry_type=="Mincer" || doc.stock_entry_type=="Mixer"'
             },
             {
                 "fieldname": "durasi",
                 "label": "Durasi",
-                "fieldtype": "Int",
-                "default": 1,
+                "fieldtype": "Timer",
                 "insert_after": "durasi_keseluruhan",
                 "depends_on": 'eval: doc.stock_entry_type=="Flaker" || doc.stock_entry_type=="Mincer" || doc.stock_entry_type=="Mixer"'
             },

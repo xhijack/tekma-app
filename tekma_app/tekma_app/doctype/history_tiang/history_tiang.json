@@ -13,7 +13,8 @@
   "document",
   "qty",
   "remarks",
-  "condition"
+  "condition",
+  "rate"
  ],
  "fields": [
   {
@@ -74,13 +75,19 @@
    "fieldtype": "Select",
    "label": "Condition",
    "options": "Dengan Tiang\nTukar Tiang"
+  },
+  {
+   "default": "0",
+   "fieldname": "rate",
+   "fieldtype": "Currency",
+   "label": "Rate"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-08-31 17:28:52.508818",
+ "modified": "2025-09-23 14:07:28.925137",
  "modified_by": "Administrator",
  "module": "Tekma App",
  "name": "History Tiang",

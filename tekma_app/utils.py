@@ -40,7 +40,7 @@ def create_stock_entry_issued(doc, is_return=False):
     se.company = doc.company
     se.posting_date = doc.posting_date
     se.posting_time = doc.posting_time
-    se.stock_entry_type = "Material Issue" if is_return else "Material Receipt"
+    se.stock_entry_type = "Material Receipt" if is_return else "Material Issue"
     se.doc_reference = doc.name
     se.items = []
     for item in doc.items:
@@ -73,14 +73,18 @@ def cancel_stock_entry(doc):
 
 
 def log_history_tiang(doc):
-    ht = frappe.new_doc("History Tiang")
-    ht.customer = doc.customer
-    ht.date = doc.posting_date
-    ht.document_type = doc.doctype
-    ht.document = doc.name
-    ht.qty = sum([item.qty for item in doc.items if item.tiang in ["Dengan Tiang","Tukar Tiang"]])
-    ht.insert()
-    ht.submit()
+    for item in doc.items:
+        if item.tiang in ["Dengan Tiang","Tukar Tiang"]:
+            ht = frappe.new_doc("History Tiang")
+            ht.customer = doc.customer
+            ht.date = doc.posting_date
+            ht.document_type = doc.doctype
+            ht.document = doc.name
+            ht.rate = item.tiang_rate
+            ht.qty = item.qty # sum([item.qty for item in doc.items if item.tiang in ["Dengan Tiang","Tukar Tiang"]])
+            ht.rate = item.tiang_rate
+            ht.insert()
+            ht.submit()
 
 
 def cancel_log_history_tiang(doc):
