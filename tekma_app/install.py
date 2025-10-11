@@ -328,6 +328,12 @@ def update_fields():
                 'fieldtype': 'Select',
                 'insert_after': 'item',
                 'options': '\nFlaker\nMincer\nMixer\nWrap'
+            },{
+                'fieldname': 'jenis_paket',
+                'label': 'Jenis Paket',
+                'fieldtype': 'Select',
+                'insert_after': 'production_type',
+                'options': '\nSuper\nS Mix\nII Mix\nBrows'
             }
         ]
     }
