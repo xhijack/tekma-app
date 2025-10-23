@@ -20,6 +20,13 @@ frappe.ui.form.on('Sales Order', {
     fetch_ar_summary(frm);
     if (frm.doc.customer) {
       frm.add_custom_button(__('History Tiang'), () => open_tiang_history_dialog(frm));
+      frappe.call({
+        method: 'tekma_app.api.get_tiang_count_by_customer',
+        args: { customer: frm.doc.customer },
+        callback: (r) => {
+          console.log(r.message);
+        }
+      });
     }
   },
 
