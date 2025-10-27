@@ -571,19 +571,19 @@ def get_tiang_count_by_customer(customer):
     Return:
     {
         "dengan_tiang_qty": int/float,
-        "tanpa_tiang_qty": int/float,
+        "tukar_tiang_qty": int/float,
         "dengan_tiang_amount": float,
-        "tanpa_tiang_amount": float
+        "tukar_tiang_amount": float
     }
     Amount dihitung sebagai SUM(qty * rate).
     """
 
-    # Variasi penulisan yang akan dianggap "dengan tiang" / "tanpa tiang"
+    # Variasi penulisan yang akan dianggap "dengan tiang" / "tukar tiang"
     dengan_variants = {
         "dengan_tiang", "dengan tiang", "dengan", "with_tiang", "with tiang", "with"
     }
-    tanpa_variants = {
-        "tanpa_tiang", "tanpa tiang", "tanpa", "without_tiang", "without tiang", "without"
+    tukar_variants = {
+        "tukar_tiang", "tukar tiang", "tukar", "exchange", "swap", "swap_tiang", "swap tiang", "exchanged", "swapped"
     }
 
     # Query aggregasi (lebih cepat daripada mengambil row per row)
@@ -609,9 +609,9 @@ def get_tiang_count_by_customer(customer):
 
     # init hasil
     dengan_qty = 0
-    tanpa_qty = 0
+    tukar_qty = 0
     dengan_amt = 0.0
-    tanpa_amt = 0.0
+    tukar_amt = 0.0
     # proses setiap group hasil query
     for r in rows:
         cond = (r.get("cond") or "").strip().lower()
@@ -622,23 +622,23 @@ def get_tiang_count_by_customer(customer):
         if cond in dengan_variants:
             dengan_qty += qty
             dengan_amt += float(amt)
-        elif cond in tanpa_variants:
-            tanpa_qty += qty
-            tanpa_amt += float(amt)
+        elif cond in tukar_variants:
+            tukar_qty += qty
+            tukar_amt += float(amt)
         else:
             # jika ada kondisi lain: coba matching heuristik sederhana
             if "dengan" in cond or "with" in cond:
                 dengan_qty += qty
                 dengan_amt += float(amt)
-            elif "tanpa" in cond or "without" in cond:
-                tanpa_qty += qty
-                tanpa_amt += float(amt)
+            elif "tukar" in cond or "exchange" in cond or "swap" in cond:
+                tukar_qty += qty
+                tukar_amt += float(amt)
             # else: diabaikan (atau bisa dikumpulkan ke 'lainnya' bila diinginkan)
 
     # kembalikan dict sesuai permintaan
     return {
         "dengan_tiang_qty": dengan_qty,
-        "tanpa_tiang_qty": tanpa_qty,
+        "tukar_tiang_qty": tukar_qty,
         "dengan_tiang_amount": dengan_amt,
-        "tanpa_tiang_amount": tanpa_amt
+        "tukar_tiang_amount": tukar_amt
     }

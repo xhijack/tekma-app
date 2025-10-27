@@ -20,6 +20,22 @@ frappe.ui.form.on('Sales Invoice', {
     fetch_ar_summary(frm);
     if (frm.doc.customer) {
       frm.add_custom_button(__('History Tiang'), () => open_tiang_history_dialog(frm));
+      frappe.call({
+        method: 'tekma_app.api.get_tiang_count_by_customer',
+        args: { customer: frm.doc.customer },
+        callback: (r) => {
+          if (r.message){
+            frm.set_value('dengan_tiang_qty',r.message.dengan_tiang_qty);
+            frm.set_value('tukar_tiang_qty', r.message.tukar_tiang_qty);
+            frm.set_value('dengan_tiang_amount', r.message.dengan_tiang_amount);
+            frm.set_value('tukar_tiang_amount', r.message.tukar_tiang_amount);
+            frm.refresh_field('dengan_tiang_qty');
+            frm.refresh_field('tukar_tiang_qty');
+            frm.refresh_field('dengan_tiang_amount');
+            frm.refresh_field('tukar_tiang_amount');
+          }
+        }
+      });
     }
   },
 

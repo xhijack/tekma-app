@@ -83,6 +83,7 @@ def log_history_tiang(doc):
             ht.rate = item.tiang_rate
             ht.qty = item.qty # sum([item.qty for item in doc.items if item.tiang in ["Dengan Tiang","Tukar Tiang"]])
             ht.rate = item.tiang_rate
+            ht.condition = item.tiang
             ht.insert()
             ht.submit()
 
