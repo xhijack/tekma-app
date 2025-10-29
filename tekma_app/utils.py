@@ -82,10 +82,21 @@ def log_history_tiang(doc):
             ht.document = doc.name
             ht.rate = item.tiang_rate
             ht.qty = item.qty # sum([item.qty for item in doc.items if item.tiang in ["Dengan Tiang","Tukar Tiang"]])
-            ht.rate = item.tiang_rate
             ht.condition = item.tiang
             ht.insert()
             ht.submit()
+
+def log_tiang(customer, posting_date, doctype, docname, qty, condition, rate):
+    ht = frappe.new_doc('History Tiang')
+    ht.customer = customer
+    ht.date = posting_date
+    ht.document_type = doctype
+    ht.document = docname
+    ht.rate = rate
+    ht.qty = qty
+    ht.condition = condition
+    ht.insert()
+    ht.submit()
 
 
 def cancel_log_history_tiang(doc):
@@ -168,6 +179,14 @@ def stock_entry_on_validate(doc, method):
         doc.difference_qty = total_qty - total_employee_qty
     # validate_ratio_for_valuation_rate_stock_entry(doc)
 
+def stock_entry_on_submit(doc, method):
+    if doc.stock_entry_type == 'Tukar Tiang':
+        for item in doc.items:
+            log_tiang(customer=item.customer, posting_date=doc.posting_date, doctype="Stock Entry", docname=doc.name, qty=-item.qty, condition="Tukar Tiang", rate=item.basic_rate)
+
+
+def stock_entry_on_cancel(doc, method):
+    cancel_log_history_tiang(doc)
 
 # tekma_app/utils.py
 import frappe
