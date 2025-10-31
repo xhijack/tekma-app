@@ -466,7 +466,7 @@ function open_tiang_history_dialog(frm) {
     try {
       const rows = await frappe.db.get_list('History Tiang', {
         filters: { customer },
-        fields: ['name', 'posting_date', 'document_type', 'document', 'qty','condition','docstatus'],
+        fields: ['name', 'posting_date', 'document_type', 'document', 'qty','condition','rate','docstatus'],
         order_by: 'posting_date desc, creation desc',
         limit: limit
       });
@@ -488,6 +488,7 @@ function open_tiang_history_dialog(frm) {
             <th style="text-align:left">${__('Document')}</th>
             <th style="text-align:right;width:100px">${__('Qty')}</th>
             <th style="text-align:right;width:100px">${__('Condition')}</th>
+            <th style="text-align:right;width:100px">${__('Rate')}</th>
             <th style="text-align:center;width:90px">${__('Status')}</th>
           </tr>
         </thead>
@@ -510,6 +511,7 @@ function open_tiang_history_dialog(frm) {
             <td>${doc_link}</td>
             <td style="text-align:right">${frappe.format(r.qty || 0, { fieldtype: 'Float' })}</td>
             <td style="text-align:center">${r.condition}</td>
+            <td style="text-align:center">${frappe.format(r.rate || 0, { fieldtype: 'Currency' })}</td>
             <td style="text-align:center">${status}</td>
           </tr>
         `;
