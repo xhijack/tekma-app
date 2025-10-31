@@ -177,7 +177,12 @@ def stock_entry_on_validate(doc, method):
             total_employee_qty += item.qty
         
         doc.difference_qty = total_qty - total_employee_qty
-    # validate_ratio_for_valuation_rate_stock_entry(doc)
+    elif doc.stock_entry_type == "Tukar Tiang":
+        for item in doc.items:
+            if item.customer is None:
+                frappe.throw("Customer Harus di isi untuk menggunakan Stock Entry berjenis Tukar Tiang")
+            if item.s_warehouse == "Pelanggan - MK":
+                frappe.throw("Gudang Source Warehouse harus Pelanggan")
 
 def stock_entry_on_submit(doc, method):
     if doc.stock_entry_type == 'Tukar Tiang':
@@ -289,3 +294,21 @@ def compute_valuation_rates(doc=None, rounding: int = 0, ratio_field: str = "rat
         })
 
     return _compute_core(finished, total_rm_cost, rounding=int(rounding or 0))
+
+
+def purchase_invoice_on_submit(doc, method):
+    party_links = frappe.get_list("party Link",filters={"primary_party": "Ramdani", "primary_role": "Supplier"})
+    customer_name = frappe.db.get_value("Party Link", party_links[0].name, "secondary_party")
+    if doc.update_stock == 1:
+        for item in doc.items:
+            log_tiang(customer=customer_name, posting_date=doc.posting_date, doctype="Purchase Invoice",docname=doc.name,qty=-item.qty, condition="Dengan Tiang", rate=item.rate)
+
+def puchase_receipt_on_submit(doc, method):
+    party_links = frappe.get_list("party Link",filters={"primary_party": "Ramdani", "primary_role": "Supplier"})
+    customer_name = frappe.db.get_value("Party Link", party_links[0].name, "secondary_party")
+    for item in doc.items:
+        log_tiang(customer=customer_name, posting_date=doc.posting_date, doctype="Purchase Invoice",docname=doc.name,qty=-item.qty, condition="Dengan Tiang", rate=item.rate)
+
+
+def purchase_invoice_on_cancel(doc, method):
+    cancel_log_history_tiang(doc)

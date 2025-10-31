@@ -158,7 +158,15 @@ doc_events = {
         "validate": "tekma_app.utils.stock_entry_on_validate",
         "on_submit": "tekma_app.utils.stock_entry_on_submit",
         "on_cancel": "tekma_app.utils.stock_entry_on_cancel",
-	}
+	},
+    "Purchase Invoice": {
+        "on_submit": "tekma_app.utils.purchase_invoice_on_submit",
+        "on_cancel": "tekma_app.utils.purchase_invoice_on_cancel"
+    },
+     "Purchase Receipt": {
+        "on_submit": "tekma_app.utils.purchase_receipt_on_submit",
+        "on_cancel": "tekma_app.utils.purchase_invoice_on_cancel"
+    }
 }
 
 # Scheduled Tasks
