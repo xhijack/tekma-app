@@ -297,14 +297,14 @@ def compute_valuation_rates(doc=None, rounding: int = 0, ratio_field: str = "rat
 
 
 def purchase_invoice_on_submit(doc, method):
-    party_links = frappe.get_list("party Link",filters={"primary_party": "Ramdani", "primary_role": "Supplier"})
+    party_links = frappe.get_list("Party Link",filters={"primary_party": doc.supplier, "primary_role": "Supplier"})
     customer_name = frappe.db.get_value("Party Link", party_links[0].name, "secondary_party")
     if doc.update_stock == 1:
         for item in doc.items:
             log_tiang(customer=customer_name, posting_date=doc.posting_date, doctype="Purchase Invoice",docname=doc.name,qty=-item.qty, condition="Dengan Tiang", rate=item.rate)
 
 def puchase_receipt_on_submit(doc, method):
-    party_links = frappe.get_list("party Link",filters={"primary_party": "Ramdani", "primary_role": "Supplier"})
+    party_links = frappe.get_list("Party Link",filters={"primary_party": doc.supplier, "primary_role": "Supplier"})
     customer_name = frappe.db.get_value("Party Link", party_links[0].name, "secondary_party")
     for item in doc.items:
         log_tiang(customer=customer_name, posting_date=doc.posting_date, doctype="Purchase Invoice",docname=doc.name,qty=-item.qty, condition="Dengan Tiang", rate=item.rate)
