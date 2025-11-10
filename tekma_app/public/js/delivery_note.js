@@ -28,7 +28,11 @@ frappe.ui.form.on('Delivery Note', {
           if (r.message){
             frm.set_value('dengan_tiang_qty',r.message.dengan_tiang_qty);
             frm.set_value('tukar_tiang_qty', r.message.tukar_tiang_qty);
-            frm.set_value('dengan_tiang_amount', r.message.dengan_tiang_amount);
+            if (r.message.dengan_tiang_qty <= 0){
+              frm.set_value('dengan_tiang_amount', 0);
+            }else{
+              frm.set_value('dengan_tiang_amount', r.message.dengan_tiang_amount);
+            }
             frm.set_value('tukar_tiang_amount', r.message.tukar_tiang_amount);
             frm.refresh_field('dengan_tiang_qty');
             frm.refresh_field('tukar_tiang_qty');
