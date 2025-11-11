@@ -298,6 +298,8 @@ def compute_valuation_rates(doc=None, rounding: int = 0, ratio_field: str = "rat
 
 def purchase_invoice_on_submit(doc, method):
     party_links = frappe.get_list("Party Link",filters={"primary_party": doc.supplier, "primary_role": "Supplier"})
+    if len(party_links) == 0:
+        return
     customer_name = frappe.db.get_value("Party Link", party_links[0].name, "secondary_party")
     if doc.update_stock == 1:
         for item in doc.items:
@@ -305,6 +307,8 @@ def purchase_invoice_on_submit(doc, method):
 
 def purchase_receipt_on_submit(doc, method):
     party_links = frappe.get_list("Party Link",filters={"primary_party": doc.supplier, "primary_role": "Supplier"})
+    if len(party_links) == 0:
+        return
     customer_name = frappe.db.get_value("Party Link", party_links[0].name, "secondary_party")
     for item in doc.items:
         log_tiang(customer=customer_name, posting_date=doc.posting_date, doctype="Purchase Receipt",docname=doc.name,qty=-item.qty, condition="Dengan Tiang", rate=item.rate)
