@@ -181,7 +181,7 @@ def stock_entry_on_validate(doc, method):
         for item in doc.items:
             if item.customer is None:
                 frappe.throw("Customer Harus di isi untuk menggunakan Stock Entry berjenis Tukar Tiang")
-            if item.s_warehouse == "Pelanggan - MK":
+            if item.s_warehouse != "Pelanggan - MK":
                 frappe.throw("Gudang Source Warehouse harus Pelanggan")
 
 def stock_entry_on_submit(doc, method):
