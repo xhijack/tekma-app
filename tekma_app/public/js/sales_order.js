@@ -32,8 +32,8 @@ frappe.ui.form.on('Sales Order', {
             }else{
               frm.set_value('dengan_tiang_amount', r.message.dengan_tiang_amount);
             }
+            
             frm.set_value('tukar_tiang_amount', r.message.tukar_tiang_amount);
-
             frm.refresh_field('dengan_tiang_qty');
             frm.refresh_field('tukar_tiang_qty');
             frm.refresh_field('dengan_tiang_amount');
