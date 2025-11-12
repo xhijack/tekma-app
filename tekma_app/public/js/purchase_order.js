@@ -402,8 +402,31 @@ function open_tiang_history_dialog(frm) {
     $wrap.html(`<div class="text-muted">${__('Memuat data...')}</div>`);
 
     try {
+      
+      // Coba dapatkan Customer yang terkait dengan Supplier lewat Party Link
+      let customerFilter = supplier;
+      try {
+        const party_links = await frappe.db.get_list('Party Link', {
+          filters: { primary_role: 'Supplier', primary_party: supplier },
+          fields: ['secondary_party'],
+          limit: 0
+        });
+
+        const customers = (party_links || [])
+          .filter(pl => (pl.link_doctype || '').toLowerCase() === 'customer')
+          .map(pl => pl.secondary_party);
+
+        if (customers.length) {
+          // gunakan filter IN jika ada lebih dari satu customer terkait
+          customerFilter = ['in', customers];
+        }
+      } catch (e) {
+        console.error('Gagal mengambil Party Link:', e);
+      }
+      // alert('customerFilter: ' + JSON.stringify(customerFilter));
+
       const rows = await frappe.db.get_list('History Tiang', {
-        filters: { customer: supplier },
+        filters: { customer: customerFilter },
         fields: ['name', 'posting_date', 'document_type', 'document', 'qty','condition','rate','docstatus'],
         order_by: 'posting_date desc, creation desc',
         limit: limit
