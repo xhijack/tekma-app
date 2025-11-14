@@ -642,3 +642,27 @@ def get_tiang_count_by_customer(customer):
         "dengan_tiang_amount": dengan_amt,
         "tukar_tiang_amount": tukar_amt
     }
+
+@frappe.whitelist()
+def get_sales_order_item_info(sales_order, item_code):
+    return frappe.db.get_value(
+        "Sales Order Item",
+        {"parent": sales_order, "item_code": item_code},
+        ["rate", "amount"],
+        as_dict=True,
+        order_by=None,
+        debug=False,
+    )
+
+@frappe.whitelist()
+def update_so_balance(sales_order):
+    total_diff = frappe.db.sql("""
+        SELECT SUM(profit_difference)
+        FROM `tabPurchase Receipt Item`
+        WHERE sales_order = %s
+    """, sales_order)[0][0] or 0
+
+    frappe.db.set_value("Sales Order", sales_order, "amount_balance", total_diff)
+    frappe.db.commit()
+
+    return {"status": "success", "amount_balance": total_diff}

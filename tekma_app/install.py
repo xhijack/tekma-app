@@ -52,10 +52,19 @@ def update_fields():
                 'read_only': 1,
             },
             {
+                'fieldname': 'amount_balance',
+                'label': 'Amount Balance',
+                'fieldtype': 'Currency',
+                'insert_after': 'dengan_tiang_amount',
+                'default': 0,
+                'read_only': 1,
+                'allow_on_submit': 1,
+            },
+            {
                 'fieldname': 'tukar_tiang_amount',
                 'label': 'Tukar Tiang Amount',
                 'fieldtype': 'Currency',
-                'insert_after': 'dengan_tiang_amount',
+                'insert_after': 'amount_balance',
                 'default': 0,
                 'read_only': 1,
             },
@@ -281,6 +290,14 @@ def update_fields():
                 'fieldtype': 'Button',
                 'insert_after': 'item_code'
                
+            },
+            {
+                'fieldname': 'profit_difference',
+                'label': 'Margin Amount',
+                'fieldtype': 'Currency',
+                'insert_after': 'amount',
+                'read_only': 1,
+                'description': 'Selisih antara amount jual (Sales Order) dan amount beli' 
             },
         ],
         'Purchase Invoice': [
