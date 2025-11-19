@@ -9,7 +9,17 @@ frappe.ui.form.on('Purchase Receipt', {
     if (frm.doc.supplier) {
       frm.add_custom_button(__('History Tiang'), () => open_tiang_history_dialog(frm));
     }
+
+    if (!frm.is_new()) {
+      calculate_all_profit_differences(frm);
+    }
+
   },
+
+  onload_post_render(frm) {
+    calculate_all_profit_differences(frm);
+  },
+
 
   supplier(frm) {
     frm._ap_loading = true;
@@ -250,8 +260,102 @@ frappe.ui.form.on('Purchase Receipt Item', {
       return;
     }
     open_item_cost_dialog(frm, row);
+  },
+
+  rate: function(frm, cdt, cdn) {
+    setTimeout(() => {
+      calculate_profit_difference(frm, cdt, cdn);
+    }, 300);
+  },
+
+  qty: function(frm, cdt, cdn) {
+    setTimeout(() => {
+      calculate_profit_difference(frm, cdt, cdn);
+    }, 300);
+  },
+
+  amount: function(frm, cdt, cdn) {
+    calculate_profit_difference(frm, cdt, cdn);
   }
 });
+
+
+async function calculate_profit_difference(frm, cdt, cdn) {
+  let row = locals[cdt][cdn];
+  if (row.sales_order && row.item_code) {
+    const res = await frappe.call({
+      method: "tekma_app.api.get_sales_order_item_info",
+      args: {
+        sales_order: row.sales_order,
+        item_code: row.item_code
+      }
+    });
+
+    if (res.message) {
+      const rate_so = res.message.rate || 0;
+      const rate_pr = row.rate || 0;
+      const qty_pr = row.qty || 0;
+      
+
+      const diff = (rate_so - rate_pr) * qty_pr;
+
+      // const jual = res.message.amount || 0;
+      // const beli = row.amount || 0;
+      row.profit_difference = diff;
+
+      await frappe.call({
+        method: "tekma_app.api.update_so_balance",
+        args: {
+          sales_order: row.sales_order,
+          // amount_balance: diff
+        }
+      })
+      
+      frm.refresh_field('items');
+    }
+
+
+  }
+}
+
+async function calculate_all_profit_differences(frm) {
+  if (!frm.doc.items || !frm.doc.items.length) return;
+
+  for (let row of frm.doc.items) {
+    if (row.sales_order && row.item_code) {
+      const res = await frappe.call({
+        method: "tekma_app.api.get_sales_order_item_info",
+        args: {
+          sales_order: row.sales_order,
+          item_code: row.item_code
+        }
+      });
+      if (res.message && res.message.rate) {
+        const rate_so = res.message.rate || 0;
+        const rate_pr = row.rate || 0;
+        const qty_pr = row.qty || 0;
+
+        const diff = (rate_so - rate_pr) * qty_pr;
+
+        // const jual = res.message.amount || 0;
+        // const beli = row.amount || 0;
+        row.profit_difference = diff;
+
+        await frappe.call({
+          method: "tekma_app.api.update_so_balance",
+          args: {
+            sales_order: row.sales_order,
+            amount_balance: diff
+          }
+        })
+        frm.refresh_field('items');
+      }
+    } 
+  }
+
+  frm.refresh_field('items');
+}
+
 
 function open_item_cost_dialog(frm, row) {
   const { company, supplier } = frm.doc || {};

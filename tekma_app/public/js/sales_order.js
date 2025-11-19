@@ -1,8 +1,6 @@
 // Client Script: Sales Order
 
 frappe.ui.form.on('Sales Order', {
-  
-
   refresh(frm) {
     // Tambahkan tombol hanya jika tidak sedang loading dan outstanding > 0
     if (!frm._ar_loading && Number(frm.doc.current_outstanding || 0) > 0) {
@@ -32,6 +30,7 @@ frappe.ui.form.on('Sales Order', {
             }else{
               frm.set_value('dengan_tiang_amount', r.message.dengan_tiang_amount);
             }
+            
             
             frm.set_value('tukar_tiang_amount', r.message.tukar_tiang_amount);
             frm.refresh_field('dengan_tiang_qty');
