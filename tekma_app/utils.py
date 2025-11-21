@@ -303,6 +303,7 @@ def purchase_invoice_on_submit(doc, method):
     customer_name = frappe.db.get_value("Party Link", party_links[0].name, "secondary_party")
     if doc.update_stock == 1:
         for item in doc.items:
+            validate_get_tiang(customer_name, item.qty, condition="Dengan Tiang")
             log_tiang(customer=customer_name, posting_date=doc.posting_date, doctype="Purchase Invoice",docname=doc.name,qty=-item.qty, condition="Dengan Tiang", rate=item.rate)
 
 def purchase_receipt_on_submit(doc, method):
@@ -310,9 +311,36 @@ def purchase_receipt_on_submit(doc, method):
     if len(party_links) == 0:
         return
     customer_name = frappe.db.get_value("Party Link", party_links[0].name, "secondary_party")
+
     for item in doc.items:
+        validate_get_tiang(customer_name, item.qty, condition="Dengan Tiang")
         log_tiang(customer=customer_name, posting_date=doc.posting_date, doctype="Purchase Receipt",docname=doc.name,qty=-item.qty, condition="Dengan Tiang", rate=item.rate)
 
+def validate_get_tiang(customer, qty, condition="Dengan Tiang"):
+    """
+    Return total qty of History Tiang for a given customer with condition "Dengan Tiang".
+    """
+    if not customer:
+        frappe.throw("Customer wajib diisi")
+
+    total_qty = frappe.db.sql(
+        """
+        SELECT COALESCE(SUM(qty), 0)
+        FROM `tabHistory Tiang`
+        WHERE customer = %s
+          AND `condition` = %s
+          AND docstatus = 1
+        """,
+        (customer, condition)
+    )[0][0] or 0
+
+    try:
+        total_qty = float(total_qty)
+    except Exception:
+        total_qty = total_qty
+    
+    if total_qty < qty:
+        frappe.throw(f"Stok tiang '{condition}' di pelanggan '{customer}' tidak dapat dibeli kembali. Tersedia: {total_qty}, dibutuhkan: {qty}")
 
 def purchase_invoice_on_cancel(doc, method):
     cancel_log_history_tiang(doc)
