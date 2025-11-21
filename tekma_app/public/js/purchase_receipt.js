@@ -5,25 +5,15 @@ frappe.ui.form.on('Purchase Receipt', {
     if (!frm._ap_loading && Number(frm.doc.current_outstanding || 0) > 0) {
       frm.add_custom_button(__('Lihat Hutang'), () => open_ap_dialog(frm));
     }
-
-    if (frm.doc.supplier) {
-      frm.add_custom_button(__('History Tiang'), () => open_tiang_history_dialog(frm));
-    }
-
-    if (!frm.is_new()) {
-      calculate_all_profit_differences(frm);
-    }
-
   },
-
-  onload_post_render(frm) {
-    calculate_all_profit_differences(frm);
-  },
-
-
+  
   supplier(frm) {
     frm._ap_loading = true;
     fetch_ap_summary(frm);
+
+    (frm.doc.items || []).forEach(row => {
+      frm.trigger('refresh_profit', row.doctype, row.name);
+    });
   },
 
   company(frm) {
@@ -262,6 +252,14 @@ frappe.ui.form.on('Purchase Receipt Item', {
     open_item_cost_dialog(frm, row);
   },
 
+  refresh_profit: function(frm, cdt, cdn) {
+    calculate_profit_difference(frm, cdt, cdn);
+  },
+
+  item_code: function(frm, cdt, cdn) {
+    calculate_profit_difference(frm, cdt, cdn);
+  },
+
   rate: function(frm, cdt, cdn) {
     setTimeout(() => {
       calculate_profit_difference(frm, cdt, cdn);
@@ -269,24 +267,34 @@ frappe.ui.form.on('Purchase Receipt Item', {
   },
 
   qty: function(frm, cdt, cdn) {
-    setTimeout(() => {
-      calculate_profit_difference(frm, cdt, cdn);
-    }, 300);
+    calculate_profit_difference(frm, cdt, cdn);
   },
 
   amount: function(frm, cdt, cdn) {
     calculate_profit_difference(frm, cdt, cdn);
-  }
+  },
 });
 
 
 async function calculate_profit_difference(frm, cdt, cdn) {
-  let row = locals[cdt][cdn];
-  if (row.sales_order && row.item_code) {
+  let row = locals[cdt] ? locals[cdt][cdn] : null;
+  if (!row) {
+    console.warn("Row tidak ditemukan untuk", cdt, cdn);
+    return;
+  }
+
+  if (row.item_code !== 'Tiang') {
+    row.profit_difference = 0;
+    frm.refresh_field('items');
+    return;
+  }
+
+
+  if (row.item_code && frm.doc.supplier) {
     const res = await frappe.call({
-      method: "tekma_app.api.get_sales_order_item_info",
+      method: "tekma_app.api.get_tiang_rate_query",
       args: {
-        sales_order: row.sales_order,
+        supplier: frm.doc.supplier,
         item_code: row.item_code
       }
     });
@@ -295,65 +303,42 @@ async function calculate_profit_difference(frm, cdt, cdn) {
       const rate_so = res.message.rate || 0;
       const rate_pr = row.rate || 0;
       const qty_pr = row.qty || 0;
-      
 
       const diff = (rate_so - rate_pr) * qty_pr;
 
-      // const jual = res.message.amount || 0;
-      // const beli = row.amount || 0;
       row.profit_difference = diff;
 
-      await frappe.call({
-        method: "tekma_app.api.update_so_balance",
-        args: {
-          sales_order: row.sales_order,
-          // amount_balance: diff
-        }
-      })
-      
       frm.refresh_field('items');
     }
-
-
   }
 }
 
-async function calculate_all_profit_differences(frm) {
-  if (!frm.doc.items || !frm.doc.items.length) return;
-
-  for (let row of frm.doc.items) {
-    if (row.sales_order && row.item_code) {
-      const res = await frappe.call({
-        method: "tekma_app.api.get_sales_order_item_info",
-        args: {
-          sales_order: row.sales_order,
-          item_code: row.item_code
-        }
-      });
-      if (res.message && res.message.rate) {
-        const rate_so = res.message.rate || 0;
-        const rate_pr = row.rate || 0;
-        const qty_pr = row.qty || 0;
-
-        const diff = (rate_so - rate_pr) * qty_pr;
-
-        // const jual = res.message.amount || 0;
-        // const beli = row.amount || 0;
-        row.profit_difference = diff;
-
-        await frappe.call({
-          method: "tekma_app.api.update_so_balance",
-          args: {
-            sales_order: row.sales_order,
-            amount_balance: diff
-          }
-        })
-        frm.refresh_field('items');
-      }
-    } 
+function calculate_all_profit_difference(frm) {
+  if (!frm.doc.supplier) {
+    frm.set_value("current_outstanding", 0);
+    return;
   }
 
-  frm.refresh_field('items');
+  const items = frm.doc.items || [];
+
+  if (items.length === 0) {
+    return;
+  }
+
+  frm._profit_loading = true;
+
+  const tasks = items.map(row => 
+    calculate_profit_difference(frm, "items", row.name)
+  );
+
+  Promise.all(tasks)
+    .then(() => {
+      frm._profit_loading = false;
+      frm.refresh_field("items");
+    })
+    .catch(() => {
+      frm._profit_loading = false;
+    });
 }
 
 
