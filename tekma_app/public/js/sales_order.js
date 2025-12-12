@@ -39,6 +39,18 @@ frappe.ui.form.on('Sales Order', {
           }
         }
       });
+
+      frappe.call({
+        method: 'tekma_app.api.update_amount_balance_so',
+        args: { customer: frm.doc.customer },
+        callback: (r) => {
+          if (r.message){
+            frm.set_value('amount_balance',r.message.amount_balance);
+
+            frm.refresh_field('amount_balance');
+          }
+        }
+      });
     }
   },
 

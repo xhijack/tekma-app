@@ -644,25 +644,46 @@ def get_tiang_count_by_customer(customer):
     }
 
 @frappe.whitelist()
-def get_sales_order_item_info(sales_order, item_code):
-    return frappe.db.get_value(
-        "Sales Order Item",
-        {"parent": sales_order, "item_code": item_code},
-        ["rate", "amount"],
-        as_dict=True,
-        order_by=None,
-        debug=False,
-    )
+def get_tiang_rate_query(supplier, item_code):
+
+    if not supplier:
+        frappe.throw(frappe._("Supplier harus diisi untuk mengambil tiang rate."))
+    if item_code != "Tiang":
+        return {"rate": 0}
+
+    data = frappe.db.sql("""
+        SELECT ht.rate
+        FROM `tabParty Link` pl
+        JOIN `tabHistory Tiang` ht
+            ON ht.customer = pl.secondary_party
+        WHERE pl.primary_party = %(supplier)s
+            AND pl.primary_role = 'Supplier'
+            AND pl.secondary_role = 'Customer'
+            AND ht.condition = 'Dengan Tiang'
+            AND ht.document_type IN ('Sales Invoice', 'Delivery Note')
+            AND ht.rate > 0
+        ORDER BY RAND()
+        LIMIT 1
+    """, {
+        "supplier": supplier,
+    }, as_dict=True)
+
+    return {"rate": data[0].rate if data else 0}
+
 
 @frappe.whitelist()
-def update_so_balance(sales_order):
+def update_amount_balance_so(customer):
     total_diff = frappe.db.sql("""
-        SELECT SUM(profit_difference)
-        FROM `tabPurchase Receipt Item`
-        WHERE sales_order = %s
-    """, sales_order)[0][0] or 0
-
-    frappe.db.set_value("Sales Order", sales_order, "amount_balance", total_diff)
-    frappe.db.commit()
+        SELECT SUM(pri.profit_difference)
+        FROM `tabParty Link` pl
+        JOIN `tabPurchase Receipt` pr
+            ON pr.supplier = pl.primary_party
+        JOIN `tabPurchase Receipt Item` pri
+            ON pri.parent = pr.name
+        WHERE pl.secondary_party = %(customer)s
+            AND pl.primary_role = 'Supplier'
+            AND pl.secondary_role = 'Customer'
+            AND pri.item_code = 'Tiang'
+    """, {"customer": customer})[0][0] or 0
 
     return {"status": "success", "amount_balance": total_diff}
