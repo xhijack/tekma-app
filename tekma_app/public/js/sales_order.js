@@ -31,7 +31,6 @@ frappe.ui.form.on('Sales Order', {
               frm.set_value('dengan_tiang_amount', r.message.dengan_tiang_amount);
             }
             
-            
             frm.set_value('tukar_tiang_amount', r.message.tukar_tiang_amount);
             frm.refresh_field('dengan_tiang_qty');
             frm.refresh_field('tukar_tiang_qty');
@@ -447,7 +446,8 @@ function open_tiang_history_dialog(frm) {
   const $controls = d.get_field('controls_html').$wrapper;
   const $wrap = d.get_field('body_html').$wrapper;
 
-  const controlHtml = `
+  // ---- FILTER UI ----
+  $controls.html(`
     <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;align-items:center">
       <div class="text-muted" style="font-size:11px">${__('Menampilkan riwayat dari Doctype')} <b>History Tiang</b></div>
       <div style="display:flex;gap:8px;align-items:center">
@@ -461,90 +461,187 @@ function open_tiang_history_dialog(frm) {
         <span class="text-muted" style="font-size:11px">${__('baris')}</span>
       </div>
     </div>
-  `;
-  $controls.html(controlHtml);
+  `);
 
+  // ---- LOAD FUNCTION ----
   async function load(limit = 20) {
     $wrap.html(`<div class="text-muted">${__('Memuat data...')}</div>`);
 
     try {
-      const rows = await frappe.db.get_list('History Tiang', {
+      let rows = await frappe.db.get_list('History Tiang', {
         filters: { customer },
-        fields: ['name', 'posting_date', 'document_type', 'document', 'qty','condition','rate','docstatus'],
+        fields: ['name', 'posting_date', 'document_type', 'document', 'qty', 'condition', 'rate', 'docstatus'],
         order_by: 'posting_date desc, creation desc',
         limit: limit
       });
 
-      const style = `
+      // Hilangkan Cancelled
+      rows = rows.filter(r => r.docstatus !== 2);
+
+      // --- SUMMARY CALC ---
+      let dengan_qty = 0, tukar_qty = 0;
+      let dengan_amount = 0, tukar_amount = 0;
+
+      rows.forEach(r => {
+        const cond = (r.condition || '').toLowerCase().trim();
+        const qty = parseFloat(r.qty) || 0;
+        const rate = parseFloat(r.rate) || 0;
+        const amount = qty * rate;
+
+        if (cond.includes('dengan')) {
+          dengan_qty += qty;
+          dengan_amount += amount;
+        } else if (cond.includes('tukar')) {
+          tukar_qty += qty;
+          tukar_amount += amount;
+        }
+      });
+
+      const fmtQty = v => frappe.format(v || 0, { fieldtype: 'Float' });
+      const fmtCurrency = v => frappe.format(v || 0, { fieldtype: 'Currency' });
+
+      // --- SUMMARY COMPACT (diletakkan DI BAWAH) ---
+      const summary_html = `
+        <div class="tiang-summary">
+          
+          <div class="sum-item">
+            <div class="sum-label">${__('DENGAN TIANG')}</div>
+            <div class="sum-value">
+              <span class="sum-amount">${fmtQty(dengan_qty)} ${fmtCurrency(dengan_amount)}</span>
+            </div>
+          </div>
+
+          <div class="sum-item">
+            <div class="sum-label">${__('TUKAR TIANG')}</div>
+            <div class="sum-value">
+              <span class="sum-amount">${fmtQty(tukar_qty)} ${fmtCurrency(tukar_amount)}</span>
+            </div>
+          </div>
+
+         
+        </div>
+
         <style>
-          .tiang-dialog { font-size: 12px; }
-          .tiang-dialog table.table th, .tiang-dialog table.table td { padding: 4px 8px; vertical-align: middle; }
-          .muted { color: #6b7280; font-size: 11px; }
+          .tiang-summary {
+            margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: 12px;
+          }
+
+          .sum-item {
+            background: #fafafa;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 8px 12px;
+            width: 150px;
+          }
+
+          .sum-label {
+            font-size: 10px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 3px;
+          }
+
+          .sum-value {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+          }
+
+          .sum-number {
+            font-size: 14px;
+            font-weight: 600;
+            color: #111;
+          }
+
+          .sum-amount {
+            font-size: 12px;
+            color: #444;
+          }
+
+          .tiang-dialog table.table th,
+          .tiang-dialog table.table td {
+            padding: 4px 8px;
+            vertical-align: middle;
+            font-size: 12px;
+          }
         </style>
       `;
 
+      // --- TABLE HEADER ---
       const header = `
         <thead>
           <tr>
-            <th style="text-align:center;width:50px">No</th>
-            <th style="text-align:left;width:200px">${__('Tanggal')}</th>
-            <th style="text-align:left;width:140px">${__('Document Type')}</th>
-            <th style="text-align:left">${__('Document')}</th>
-            <th style="text-align:right;width:100px">${__('Qty')}</th>
-            <th style="text-align:right;width:100px">${__('Condition')}</th>
-            <th style="text-align:right;width:100px">${__('Rate')}</th>
-            <th style="text-align:center;width:90px">${__('Status')}</th>
+            <th style="text-align:center;width:40px">No</th>
+            <th>${__('Tanggal')}</th>
+            <th>${__('Document Type')}</th>
+            <th>${__('Document')}</th>
+            <th style="text-align:right">${__('Qty')}</th>
+            <th style="text-align:center">${__('Condition')}</th>
+            <th style="text-align:right">${__('Rate')}</th>
+            <th style="text-align:center">${__('Status')}</th>
           </tr>
         </thead>
       `;
 
+      // --- TABLE BODY ---
       let body_rows = '';
       rows.forEach((r, i) => {
         const dt = r.document_type || '';
         const dn = r.document || '';
-        const route_dt = (dt || '').toLowerCase().replace(/\s+/g, '-');
-        const doc_link = (dt && dn)
-          ? `<a href="/app/${route_dt}/${encodeURIComponent(dn)}" target="_blank" rel="noopener">${frappe.utils.escape_html(dn)}</a>`
-          : '<span class="muted">-</span>';
-        const status = r.docstatus === 1 ? __('Submitted') : (r.docstatus === 2 ? __('Cancelled') : __('Draft'));
+        const route_dt = dt.toLowerCase().replace(/\s+/g, '-');
+
+        const doc_link = dn
+          ? `<a href="/app/${route_dt}/${encodeURIComponent(dn)}" target="_blank">${frappe.utils.escape_html(dn)}</a>`
+          : '-';
+
+        const status = r.docstatus === 1 ? __('Submitted') : __('Draft');
+
         body_rows += `
           <tr>
             <td style="text-align:center">${i + 1}</td>
             <td>${frappe.datetime.str_to_user(r.posting_date)}</td>
             <td>${frappe.utils.escape_html(dt)}</td>
             <td>${doc_link}</td>
-            <td style="text-align:right">${frappe.format(r.qty || 0, { fieldtype: 'Float' })}</td>
-            <td style="text-align:center">${r.condition}</td>
-            <td style="text-align:center">${frappe.format(r.rate || 0, { fieldtype: 'Currency' })}</td>
+            <td style="text-align:right">${fmtQty(r.qty)}</td>
+            <td style="text-align:center">${frappe.utils.escape_html(r.condition || '')}</td>
+            <td style="text-align:right">${fmtCurrency(r.rate)}</td>
             <td style="text-align:center">${status}</td>
           </tr>
         `;
       });
 
-      const html = `
-        ${style}
+      // --- FINAL HTML ---
+      $wrap.html(`
         <div class="tiang-dialog" style="overflow:auto; max-height:70vh">
-          <table class="table table-bordered" style="width:100%; background:#fff">
+          <table class="table table-bordered" style="background:#fff">
             ${header}
             <tbody>
-              ${body_rows || `<tr><td colspan="6" style="text-align:center; color:#888">${__('Tidak ada data')}</td></tr>`}
+              ${body_rows || `<tr><td colspan="8" style="text-align:center;color:#888">${__('Tidak ada data')}</td></tr>`}
             </tbody>
           </table>
         </div>
-        <div class="mt-2 text-muted">${__('Baris ditampilkan')}: ${rows.length} • ${__('Batas')}: ${limit}</div>
-      `;
 
-      $wrap.html(html);
+        ${summary_html}
+      `);
+
     } catch (err) {
       console.error(err);
       $wrap.html(`<div class="text-danger">${__('Gagal memuat data.')}</div>`);
     }
   }
 
+  // ---- EVENT: Page size ----
   $controls.find('select[data-role="page-size"]').on('change', function () {
-    const val = parseInt($(this).val(), 10) || 20;
-    load(val);
+    load(parseInt($(this).val(), 10) || 20);
   });
 
+  // ---- INITIAL LOAD ----
   load(20);
 }
