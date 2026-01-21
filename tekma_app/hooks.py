@@ -166,6 +166,9 @@ doc_events = {
      "Purchase Receipt": {
         "on_submit": "tekma_app.utils.purchase_receipt_on_submit",
         "on_cancel": "tekma_app.utils.purchase_invoice_on_cancel"
+    },
+    "Sales Order": {
+        "before_save": "tekma_app.utils.sales_order_autofill_pembayaran"
     }
 }
 

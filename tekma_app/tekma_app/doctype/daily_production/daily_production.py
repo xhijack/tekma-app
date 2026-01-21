@@ -9,9 +9,10 @@ from frappe import db
 class DailyProduction(Document):
 	def validate(self):
 		for item in self.productions:
-			item.qty_sales_order = self.get_qty_based_on_sales_order_undelivered(item.item_code)
+			item.qty_sales_order = self.get_qty_so_to_deliver(item.item_code)
 			item.actual_qty = self.get_actul_qty_based_on_item_code_and_warehouse(item.item_code, self.warehouse)
-			item.prediction_qty = item.actual_qty + item.qty_sales_order + item.qty_production
+			# item.prediction_qty = item.actual_qty + item.qty_sales_order + item.qty_production
+			item.prediction_qty = item.actual_qty + item.qty_production - item.qty_sales_order
 			item.sum_kg = self.calculate_ratio_item_with_prediction_qty(item.item_code, item.prediction_qty)
 
 	def get_qty_based_on_sales_order_undelivered(self, item_code):
@@ -39,6 +40,34 @@ class DailyProduction(Document):
 				if undelivered_qty > 0:
 					total_qty += undelivered_qty
 
+		return total_qty
+
+	# Update Function
+	def get_qty_so_to_deliver(self, item_code):
+		sales_orders = db.get_all(
+			"Sales Order",
+			fields=["name"],
+			filters={
+				"docstatus": 1,
+				"status": "To Deliver and Bill",
+			}
+		)
+
+		total_qty = 0
+		for so in sales_orders:
+			items = db.get_all(
+				"Sales Order Item",
+				fields=["qty", "delivered_qty"],
+				filters={
+					"parent": so["name"],
+					"item_code": item_code
+				}
+			)
+			for item in items:
+				undelivered_qty = (item.qty or 0) - (item.delivered_qty or 0)
+				if undelivered_qty > 0:
+					total_qty += undelivered_qty
+		
 		return total_qty
 
 	def get_actul_qty_based_on_item_code_and_warehouse(self, item_code, warehouse):

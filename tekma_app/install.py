@@ -68,7 +68,19 @@ def update_fields():
                 'default': 0,
                 'read_only': 1,
             },
-            
+            {
+                'fieldname': 'keterangan',
+                'label': 'Keterangan',
+                'fieldtype': 'Data',
+                'insert_after': 'po_no',
+            },
+            {
+                'fieldname': 'metode_pembayaran_customer',
+                'label': 'Metode Pembayaran Customer',
+                'fieldtype': 'Link',
+                'options': 'Mode of Payment',
+                'insert_after': 'delivery_date'
+            },
         ],
         'Sales Order Item': [
             {
@@ -157,7 +169,14 @@ def update_fields():
                 'insert_after': 'dengan_tiang_amount',
                 'default': 0,
                 'read_only': 1,
-            }
+            },
+            {
+                'fieldname': 'ongkos_kirim',
+                'label': 'Ongkos Kirim',
+                'fieldtype': 'Currency',
+                'insert_after': 'net_total',
+                'allow_on_submit': 1
+            },
         ],
         'Delivery Note Item': [
             {
@@ -467,6 +486,15 @@ def update_fields():
                 'fieldtype': 'Select',
                 'insert_after': 'production_type',
                 'options': '\nSuper\nS Mix\nII Mix\nBrows'
+            }
+        ],
+        'Customer' : [
+            {
+                'fieldname': 'metode_pembayaran_customer',
+                'label': 'Metode Pembayaran Customer',
+                'fieldtype': 'Link',
+                'options': 'Mode of Payment',
+                'insert_after': 'customer_group'
             }
         ]
     }
