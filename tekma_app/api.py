@@ -687,3 +687,33 @@ def update_amount_balance_so(customer):
     """, {"customer": customer})[0][0] or 0
 
     return {"status": "success", "amount_balance": total_diff}
+
+@frappe.whitelist()
+def get_prod_reference(doctype, txt, searchfield, start, page_len, filters):
+    stock_entry_type = filters.get("stock_entry_type")
+
+    return frappe.db.sql("""
+        SELECT
+            name,
+            CONCAT(
+                DATE_FORMAT(posting_date, '%%Y-%%m-%%d'),
+                ', ',
+                IFNULL(jenis_paket, '-'),
+                ', ',
+                IFNULL(kode_bak, '-'),
+                ', ',
+                IFNULL(urutan, '-')
+            ) AS description
+        FROM `tabStock Entry`
+        WHERE
+            docstatus = 1
+            AND stock_entry_type = %(stock_entry_type)s
+            AND name LIKE %(txt)s
+        ORDER BY posting_date DESC
+        LIMIT %(start)s, %(page_len)s
+    """, {
+        "txt": f"%{txt}%",
+        "start": start,
+        "page_len": page_len,
+        "stock_entry_type": stock_entry_type
+    })

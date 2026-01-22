@@ -81,6 +81,20 @@ def update_fields():
                 'options': 'Mode of Payment',
                 'insert_after': 'delivery_date'
             },
+            {
+                'fieldname': 'kasir',
+                'label': 'Kasir',
+                'fieldtype': 'Link',
+                'options': 'User',
+                'insert_after': 'po_no'
+            },
+            {
+                'fieldname': 'sales',
+                'label': 'Sales',
+                'fieldtype': 'Link',
+                'options': 'Sales Person',
+                'insert_after': 'kasir'
+            },
         ],
         'Sales Order Item': [
             {
@@ -177,6 +191,13 @@ def update_fields():
                 'insert_after': 'net_total',
                 'allow_on_submit': 1
             },
+            {
+                'fieldname': 'pic_warehouse',
+                'label': 'PIC Warehouse',
+                'fieldtype': 'Link',
+                'options': 'Employee',
+                'insert_after': 'pic',
+            },
         ],
         'Delivery Note Item': [
             {
@@ -252,6 +273,13 @@ def update_fields():
                 'insert_after': 'dengan_tiang_amount',
                 'default': 0,
                 'read_only': 1,
+            },
+            {
+                'fieldname': 'admin_finance',
+                'label': 'Admin Finance',
+                'fieldtype': 'Link',
+                'options': 'User',
+                'insert_after': 'pic',
             },
         ],
         'Sales Invoice Item': [

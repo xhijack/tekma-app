@@ -52,6 +52,20 @@ frappe.ui.form.on('Sales Order', {
         }
       });
     }
+
+    if (!frm.doc.customer || frm.doc.metode_pembayaran_customer) return;
+    frappe.db.get_value(
+      "Customer",
+      frm.doc.customer,
+      "metode_pembayaran_customer"
+    ).then(r => {
+      if (r.message && r.message.metode_pembayaran_customer) {
+        frm.set_value(
+          "metode_pembayaran_customer",
+          r.message.metode_pembayaran_customer
+        )
+      }
+    })
   },
 
   company(frm) {
@@ -657,3 +671,4 @@ function open_tiang_history_dialog(frm) {
   // ---- INITIAL LOAD ----
   load(20);
 }
+
