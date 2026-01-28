@@ -82,10 +82,9 @@ doctype_js = {"Sales Order": "public/js/sales_order.js",
 # ----------
 
 # add methods and filters to jinja environment
-# jinja = {
-# 	"methods": "tekma_app.utils.jinja_methods",
-# 	"filters": "tekma_app.utils.jinja_filters"
-# }
+jinja = {
+    "methods": "tekma_app.utils.get_terbilang",
+}
 
 # Installation
 # ------------

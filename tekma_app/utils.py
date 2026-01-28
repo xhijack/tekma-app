@@ -1,5 +1,11 @@
 import frappe
+from terbilang import Terbilang
 
+
+def get_terbilang(amount):
+    t = Terbilang()
+    t.parse(amount)
+    return t.getresult()
 
 def create_stock_entry(doc, is_return=False):
     """
