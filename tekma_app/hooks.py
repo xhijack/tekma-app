@@ -200,9 +200,10 @@ doc_events = {
 # Overriding Methods
 # ------------------------------
 #
-# override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "tekma_app.event.get_events"
-# }
+override_whitelisted_methods = {
+	"erpnext.selling.doctype.sales_order.sales_order.make_delivery_note": "tekma_app.overrides.sales_order.make_delivery_note",
+    "erpnext.selling.doctype.sales_order.sales_order.make_sales_invoice": "tekma_app.overrides.sales_order.make_sales_invoice"
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
