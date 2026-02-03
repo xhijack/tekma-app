@@ -82,10 +82,9 @@ doctype_js = {"Sales Order": "public/js/sales_order.js",
 # ----------
 
 # add methods and filters to jinja environment
-# jinja = {
-# 	"methods": "tekma_app.utils.jinja_methods",
-# 	"filters": "tekma_app.utils.jinja_filters"
-# }
+jinja = {
+    "methods": "tekma_app.utils.get_terbilang",
+}
 
 # Installation
 # ------------
@@ -166,6 +165,9 @@ doc_events = {
      "Purchase Receipt": {
         "on_submit": "tekma_app.utils.purchase_receipt_on_submit",
         "on_cancel": "tekma_app.utils.purchase_invoice_on_cancel"
+    },
+    "Sales Order": {
+        "before_save": "tekma_app.utils.sales_order_autofill_pembayaran"
     }
 }
 
@@ -198,9 +200,10 @@ doc_events = {
 # Overriding Methods
 # ------------------------------
 #
-# override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "tekma_app.event.get_events"
-# }
+override_whitelisted_methods = {
+	"erpnext.selling.doctype.sales_order.sales_order.make_delivery_note": "tekma_app.overrides.sales_order.make_delivery_note",
+    "erpnext.selling.doctype.sales_order.sales_order.make_sales_invoice": "tekma_app.overrides.sales_order.make_sales_invoice"
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,

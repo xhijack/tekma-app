@@ -1,5 +1,11 @@
 import frappe
+from terbilang import Terbilang
 
+
+def get_terbilang(amount):
+    t = Terbilang()
+    t.parse(amount)
+    return t.getresult()
 
 def create_stock_entry(doc, is_return=False):
     """
@@ -345,3 +351,13 @@ def validate_get_tiang(customer, qty, condition="Dengan Tiang"):
 
 def purchase_invoice_on_cancel(doc, method):
     cancel_log_history_tiang(doc)
+
+def sales_order_autofill_pembayaran(doc, method):
+    if doc.customer and not doc.metode_pembayaran_customer:
+        metode = frappe.db.get_value(
+            "Customer",
+            doc.customer,
+            "metode_pembayaran_customer"
+        )
+        if metode:
+            doc.metode_pembayaran_customer = metode

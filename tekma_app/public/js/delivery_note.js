@@ -13,6 +13,12 @@ frappe.ui.form.on('Delivery Note', {
       frm.add_custom_button(__('History Tiang'), () => open_tiang_history_dialog(frm));
     }
 
+    const $field = frm.fields_dict.ongkos_kirim.$wrapper.find('input')
+    $field.off('keypress').on('keypress', function(evt) {
+      if ((evt.which < 48 || evt.which > 57) && evt.which !== 46) {
+        evt.preventDefault()
+      }
+    })
   },
 
   customer(frm) {

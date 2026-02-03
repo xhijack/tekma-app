@@ -1,6 +1,7 @@
 frappe.ui.form.on('Stock Entry', {
   refresh(frm) {
     apply_prod_reference_query(frm);
+    toggle_machine_fields(frm);
   },
    async update_ratio_valuation_rate(frm) {
     if (!frm.doc.items || !frm.doc.items.length) {
@@ -63,6 +64,8 @@ frappe.ui.form.on('Stock Entry', {
   },
   stock_entry_type(frm) {
     apply_prod_reference_query(frm);
+    toggle_machine_fields(frm);
+
     if (frm.doc.stock_entry_type === 'Mincer' || frm.doc.stock_entry_type === 'Mixer' || frm.doc.stock_entry_type === 'Flaker') {
       frm.doc.from_bom = 1;
       frm.doc.use_multi_level_bom = 0
@@ -82,46 +85,47 @@ frappe.ui.form.on('Stock Entry', {
   }
 });
 
-function apply_prod_reference_query(frm) {
-  if (frm.doc.stock_entry_type === 'Mincer') {
-    // When Sales Order's stock_entry_type is Mincer,
-    // filter prod_reference to only records with stock_entry_type = Flaker
-    frm.set_query('prod_reference', function() {
-      return {
-        filters: {
-          stock_entry_type: 'Flaker',
-          docstatus: 1  // Only submitted documents
-        }
-      };
-    });
-  } else if (frm.doc.stock_entry_type === 'Mixer') {
-    // When Sales Order's stock_entry_type is Mincer,
-    // filter prod_reference to only records with stock_entry_type = Flaker
-    frm.set_query('prod_reference', function() {
-      return {
-        filters: {
-          stock_entry_type: 'Mincer',
-          docstatus: 1  // Only submitted documents
-        }
-      };
-    });
-  }else if (frm.doc.stock_entry_type === 'Wrap') {
-    // When Sales Order's stock_entry_type is Mincer,
-    // filter prod_reference to only records with stock_entry_type = Flaker
-    frm.set_query('prod_reference', function() {
-      return {
-        filters: {
-          stock_entry_type: 'Mixer',
-          docstatus: 1  // Only submitted documents
-        }
-      };
-    });
-  } else {
-    // For other values, remove the filter (show all)
-    frm.set_query('prod_reference', function() {
-      return {};
-    });
+function toggle_machine_fields(frm) {
+  const type = frm.doc.stock_entry_type;
+
+  if (type === 'Flaker') {
+    frm.set_df_property('ganti_pisau', 'hidden', 1);
+    frm.set_df_property('prod_reference', 'hidden', 1);
   }
+
+  if (type === 'Mixer') {
+    frm.set_df_property('ganti_pisau', 'hidden', 1);
+    frm.set_df_property('asisten', 'hidden', 1);
+    frm.set_df_property('kode_bak', 'hidden', 1);
+    frm.set_df_property('kondisi_bahan', 'hidden', 1);
+    frm.set_df_property('kondisi_mesin', 'hidden', 1);
+  }
+}
+
+function apply_prod_reference_query(frm) {
+  let ref_type = null;
+
+  if (frm.doc.stock_entry_type === 'Mincer') {
+    ref_type = 'Flaker';
+  } else if (frm.doc.stock_entry_type === 'Mixer') {
+    ref_type = 'Mincer';
+  } else if (frm.doc.stock_entry_type === 'Wrap') {
+    ref_type = 'Mixer';
+  }
+
+  if (!ref_type) {
+    frm.set_query('prod_reference', () => ({}));
+    return;
+  }
+
+  frm.set_query('prod_reference', function () {
+    return {
+      query: 'tekma_app.api.get_prod_reference',
+      filters: {
+        stock_entry_type: ref_type
+      }
+    };
+  });
 }
 
 frappe.ui.form.on('Stock Entry Detail', {
