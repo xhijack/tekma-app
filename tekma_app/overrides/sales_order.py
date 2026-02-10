@@ -76,6 +76,6 @@ def validate(doc, method):
         if tax.account_head == ACCOUNT_TIANG and tax.charge_type == "Actual":
             if abs((tax.tax_amount or 0) - expected_amount) > 1:
                 frappe.throw(
-                    _("Nilai Pajak Tiang harus {0} dan tidak boleh diubah manual.")
+                    _("Nominal Tiang harus {0} dan tidak boleh diubah manual.")
                     .format(frappe.format_value(expected_amount, "Currency"))
                 )
