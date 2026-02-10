@@ -11,6 +11,7 @@ def create_stock_entry(doc, is_return=False):
     """
         `doc` is Delivery Note or Sales Invoice Document
     """
+    tiang_settings = frappe.get_single("Tiang Settings")
     se = frappe.new_doc("Stock Entry")
     se.purpose = "Material Transfer"
     se.from_bom = 0
@@ -22,12 +23,11 @@ def create_stock_entry(doc, is_return=False):
     se.items = []
     for item in doc.items:
         se.append("items", {
-            "item_code": "Tiang",
-            "item_name": item.item_name,
+            "item_code": tiang_settings.item_tiang,
             "item_group": item.item_group,
             "qty": item.qty if not is_return else -item.qty,
-            "s_warehouse": "Stores - MK" if not is_return else "Pelanggan - MK",
-            "t_warehouse": "Pelanggan - MK" if not is_return else "Stores - MK",
+            "s_warehouse": tiang_settings.tiang_warehouse if not is_return else tiang_settings.customer_warehouse,
+            "t_warehouse": tiang_settings.customer_warehouse if not is_return else tiang_settings.tiang_warehouse,
             "to_customer": doc.customer if not is_return else None,
             "customer": doc.customer if is_return else None,
         })
@@ -40,6 +40,7 @@ def create_stock_entry_issued(doc, is_return=False):
     """
         `doc` is Delivery Note or Sales Invoice Document
     """
+    tiang_settings = frappe.get_single("Tiang Settings")
     se = frappe.new_doc("Stock Entry")
     se.purpose = "Material Issue"
     se.from_bom = 0
@@ -51,11 +52,11 @@ def create_stock_entry_issued(doc, is_return=False):
     se.items = []
     for item in doc.items:
         se.append("items", {
-            "item_code": "Tiang",
-            "item_name": item.item_name,
+            "item_code": tiang_settings.item_tiang,
+            # "item_name": item.item_name,
             "item_group": item.item_group,
             "qty": item.qty if not is_return else -item.qty,
-            "s_warehouse": "Stores - MK"
+            "s_warehouse": tiang_settings.tiang_warehouse
         })
     if se.items:
         se.insert()
