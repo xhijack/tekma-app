@@ -11,6 +11,7 @@ frappe.ui.form.on('Sales Order', {
       frm.add_custom_button(__('History Tiang'), () => open_tiang_history_dialog(frm));
     }
 
+    sync_tiang_tax(frm);
   },
 
   customer(frm) {
@@ -72,6 +73,10 @@ frappe.ui.form.on('Sales Order', {
     frm._ar_loading = true;
     fetch_ar_summary(frm);
   },
+
+  items_on_form_rendered(frm) {
+    sync_tiang_tax(frm);
+  }
 });
 
 function fetch_ar_summary(frm) {
@@ -306,6 +311,16 @@ frappe.ui.form.on('Sales Order Item', {
       return;
     }
     open_item_price_dialog(frm, row);
+  },
+
+  qty(frm, cdt, cdn) {
+    sync_tiang_tax(frm);
+  },
+  tiang_rate(frm, cdt, cdn) {
+    sync_tiang_tax(frm);
+  },
+  tiang(frm, cdt, cdn) {
+    sync_tiang_tax(frm);
   }
 });
 
@@ -672,3 +687,34 @@ function open_tiang_history_dialog(frm) {
   load(20);
 }
 
+function sync_tiang_tax(frm) {
+    const ACCOUNT_TIANG = "4103 - Penjualan Tiang - MK";
+    let total = 0;
+
+    (frm.doc.items || []).forEach(row => {
+        if (row.tiang === "Dengan Tiang") {
+            total += (row.qty || 0) * (row.tiang_rate || 0);
+        }
+    });
+
+    let tax_row = (frm.doc.taxes || []).find(
+        t => t.account_head === ACCOUNT_TIANG && t.charge_type === "Actual"
+    );
+
+    if (total > 0) {
+        if (!tax_row) {
+            tax_row = frm.add_child("taxes", {
+                charge_type: "Actual",
+                account_head: ACCOUNT_TIANG,
+                description: "Penjualan Tiang"
+            });
+        }
+        tax_row.tax_amount = total;
+    } else {
+        if (tax_row) {
+            frm.doc.taxes = frm.doc.taxes.filter(t => t !== tax_row);
+        }
+    }
+
+    frm.refresh_field("taxes");
+}

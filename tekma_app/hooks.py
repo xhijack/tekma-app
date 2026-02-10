@@ -167,7 +167,13 @@ doc_events = {
         "on_cancel": "tekma_app.utils.purchase_invoice_on_cancel"
     },
     "Sales Order": {
-        "before_save": "tekma_app.utils.sales_order_autofill_pembayaran"
+        "before_save": [
+            "tekma_app.utils.sales_order_autofill_pembayaran",
+            "tekma_app.overrides.sales_order.before_save"
+        ],
+        "validate": [
+            "tekma_app.overrides.sales_order.validate"
+        ]
     }
 }
 
