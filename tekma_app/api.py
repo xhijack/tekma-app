@@ -717,3 +717,47 @@ def get_prod_reference(doctype, txt, searchfield, start, page_len, filters):
         "page_len": page_len,
         "stock_entry_type": stock_entry_type
     })
+
+@frappe.whitelist()
+def get_item_support(stock_entry_name):
+    stock_entry = frappe.get_doc("Stock Entry", stock_entry_name)
+    all_items_supports = []
+    for item in stock_entry.items:
+        if item.is_finished_item == 1:
+            item_supports = frappe.get_all("Item Support", filters={"parent": "Kebab 1 KG"}, fields=["item","item_name","uom","qty"])
+            all_items_supports.extend(item_supports)
+    # all_items_support di groupkan berdsarkan item dan dijumlahkan qty nya
+    item_support_dict = {}
+
+    # build map of finished item qty from the Stock Entry
+    finished_qty = {}
+    for it in stock_entry.items:
+        if it.is_finished_item == 1:
+            finished_qty[it.item_code] = float(it.qty or 0)
+
+    if not finished_qty:
+        return []
+
+    # fetch Item Support rows for all finished items (include parent to know multiplier)
+    item_supports = frappe.get_all(
+        "Item Support",
+        filters={"parent": ["in", list(finished_qty.keys())]},
+        fields=["parent", "item", "item_name", "uom", "qty"]
+    )
+
+    # aggregate and multiply support.qty by finished item qty
+    for s in item_supports:
+        parent_item = s.get("parent")
+        multiplier = finished_qty.get(parent_item, 0)
+        qty = float(s.get("qty") or 0) * multiplier
+        key = s.get("item")
+        if key in item_support_dict:
+            item_support_dict[key]["qty"] += qty
+        else:
+            item_support_dict[key] = {
+                "item": key,
+                "item_name": s.get("item_name"),
+                "uom": s.get("uom"),
+                "qty": qty
+            }
+    return list(item_support_dict.values())

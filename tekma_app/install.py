@@ -485,11 +485,18 @@ def update_fields():
                 "reqd": 1
             },
             {
+                "fieldname": "get_item_support",
+                "fieldtype": "Button",
+                "label": "Get Item Support",
+                "insert_after": "update_ratio_valuation_rate",
+                "depends_on": 'eval: doc.stock_entry_type=="Wrap"'
+            },
+            {
                 "fieldname": "update_ratio_valuation_rate",
                 "fieldtype": "Button",
                 "label": "Update Ratio Valuation Rate",
-                "insert_after": "get_stock_and_rate"
-                
+                "depends_on": 'eval: doc.stock_entry_type=="Wrap"',
+                "insert_after": "get_stock_and_rate"   
             }
         ],
         'Item' : [    
@@ -499,6 +506,13 @@ def update_fields():
                 'fieldtype': 'Float',
                 'insert_after': 'stock_uom',
                 'default': 0,  
+            },
+            {
+                'fieldname': 'item_support',
+                'label': 'Item Support',
+                'fieldtype': 'Table',
+                'options': 'Item Support',
+                'insert_after': 'default_bom'
             }
         ],
         'BOM' : [  

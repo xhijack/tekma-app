@@ -3,7 +3,7 @@ frappe.ui.form.on('Stock Entry', {
     apply_prod_reference_query(frm);
     toggle_machine_fields(frm);
   },
-   async update_ratio_valuation_rate(frm) {
+  async update_ratio_valuation_rate(frm) {
     if (!frm.doc.items || !frm.doc.items.length) {
       frappe.msgprint(__('Tidak ada baris Item.'));
       return;
@@ -82,7 +82,42 @@ frappe.ui.form.on('Stock Entry', {
     });
       
     }
-  }
+  },
+
+  get_item_support(frm) {
+    frappe.call({
+        method: "tekma_app.api.get_item_support",
+        args: {
+            stock_entry_name: frm.doc.name
+        },
+        callback: function(r) {
+            if (r.message) {
+                const items = r.message;
+                
+                items.forEach(item => {
+                    // Buat child row
+                    const new_row = frappe.model.add_child(frm.doc, 'items');
+                    
+                    // Set nilai wajib (mandatory fields)
+                    frappe.model.set_value(new_row.doctype, new_row.name, 'item_code', item.item);
+                    frappe.model.set_value(new_row.doctype, new_row.name, 'item_name', item.item_name);
+                    frappe.model.set_value(new_row.doctype, new_row.name, 'stock_uom', item.uom);
+                    frappe.model.set_value(new_row.doctype, new_row.name, 'qty', item.qty);
+                    
+                    // ✅ TAMBAHAN: Field mandatory yang kurang
+                    frappe.model.set_value(new_row.doctype, new_row.name, 'qty_as_per_stock_uom', item.qty);
+                    frappe.model.set_value(new_row.doctype, new_row.name, 'conversion_factor', 1);
+                    
+                    // Optional fields
+                    frappe.model.set_value(new_row.doctype, new_row.name, 'set_basic_rate_manually', 1);
+                });
+                
+                frm.dirty();
+                frm.refresh_field('items');
+            }
+        }
+    });
+}
 });
 
 function toggle_machine_fields(frm) {
