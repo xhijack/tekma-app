@@ -229,7 +229,7 @@ override_whitelisted_methods = {
 
 # Request Events
 # ----------------
-# before_request = ["tekma_app.utils.before_request"]
+before_request = ["tekma_app.monkey_patch.stock_ledger.patch"]
 after_migrate = ["tekma_app.install.update_fields"]
 
 # Job Events
