@@ -527,7 +527,7 @@ def update_fields():
                 'label': 'Jenis Paket',
                 'fieldtype': 'Select',
                 'insert_after': 'production_type',
-                'options': '\nSuper\nS Mix\nII Mix\nBrows'
+                'options': '\nSuper\nS Mix\nII Mix\nII Mix (B)\nBrows'
             }
         ],
         'Customer' : [
