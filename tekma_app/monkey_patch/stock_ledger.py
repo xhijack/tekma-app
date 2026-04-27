@@ -19,32 +19,49 @@ def patch():
             "width": 250
         })
 
-        pr_map = {}
+        # mapping doctype -> item table
+        doctype_map = {
+            "Purchase Receipt": "Purchase Receipt Item",
+            "Purchase Invoice": "Purchase Invoice Item",
+            "Delivery Note": "Delivery Note Item",
+            "Sales Invoice": "Sales Invoice Item",
+            "Stock Entry": "Stock Entry Detail",
+            "Stock Reconciliation": "Stock Reconciliation Item",
+        }
 
-        # ambil semua Purchase Receipt
-        pr_names = list({
-            d.get("voucher_no")
-            for d in data
-            if d.get("voucher_type") == "Purchase Receipt"
-        })
+        # kumpulkan voucher per type
+        voucher_map = {}
+        for row in data:
+            vt = row.get("voucher_type")
+            vn = row.get("voucher_no")
 
-        if pr_names:
+            if vt in doctype_map and vn:
+                voucher_map.setdefault(vt, set()).add(vn)
+
+        # ambil semua data sekaligus
+        description_map = {}
+
+        for vt, vouchers in voucher_map.items():
+            item_doctype = doctype_map[vt]
+
             items = frappe.get_all(
-                "Purchase Receipt Item",
-                filters={"parent": ["in", pr_names]},
+                item_doctype,
+                filters={"parent": ["in", list(vouchers)]},
                 fields=["parent", "item_code", "description"]
             )
 
-            # mapping: (PR, item_code)
             for d in items:
-                key = (d.parent, d.item_code)
-                pr_map[key] = d.description
+                key = (vt, d.parent, d.item_code)
+                description_map[key] = d.description
 
-        # inject ke row
+        # inject ke report
         for row in data:
-            if row.get("voucher_type") == "Purchase Receipt":
-                key = (row.get("voucher_no"), row.get("item_code"))
-                row["description_item"] = pr_map.get(key)
+            vt = row.get("voucher_type")
+            vn = row.get("voucher_no")
+            ic = row.get("item_code")
+
+            key = (vt, vn, ic)
+            row["description_item"] = description_map.get(key)
 
         return columns, data
 
