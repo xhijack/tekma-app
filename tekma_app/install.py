@@ -538,6 +538,29 @@ def update_fields():
                 'options': 'Mode of Payment',
                 'insert_after': 'customer_group'
             }
+        ],
+        'Pick List' : [
+            {
+                'fieldname': 'urutan_rute',
+                'label': 'Urutan Rute',
+                'fieldtype': 'Int',
+                'mandatory': 1,
+                'insert_after': 'for_qty'
+            },
+            {
+                'fieldname': 'packaging',
+                'label': 'Packaging',
+                'fieldtype': 'Select',
+                'mandatory': 1,
+                'options': '\nPlastik\nKardus\nKeranjang\nStyrofoam',
+                'insert_after': 'urutan_rute'
+            },
+            {
+                'fieldname': 'catatan_untuk_gudang',
+                'label': 'Catatan untuk Gudang',
+                'fieldtype': 'Small Text',
+                'insert_after': 'ignore_pricing_rule'
+            },
         ]
     }
 
