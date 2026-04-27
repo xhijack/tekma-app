@@ -544,14 +544,14 @@ def update_fields():
                 'fieldname': 'urutan_rute',
                 'label': 'Urutan Rute',
                 'fieldtype': 'Int',
-                'mandatory': 1,
+                'reqd': 1,
                 'insert_after': 'for_qty'
             },
             {
                 'fieldname': 'packaging',
                 'label': 'Packaging',
                 'fieldtype': 'Select',
-                'mandatory': 1,
+                'reqd': 1,
                 'options': '\nPlastik\nKardus\nKeranjang\nStyrofoam',
                 'insert_after': 'urutan_rute'
             },
