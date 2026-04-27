@@ -95,6 +95,14 @@ def update_fields():
                 'options': 'Sales Person',
                 'insert_after': 'kasir'
             },
+            {
+                'fieldname': 'credit_limit',
+                'label': 'Credit Limit',
+                'fieldtype': 'Currency',
+                'insert_after': 'metode_pembayaran_customer',
+                'depends_on': 'eval:doc.customer',
+                'read_only': 1
+            }
         ],
         'Sales Order Item': [
             {

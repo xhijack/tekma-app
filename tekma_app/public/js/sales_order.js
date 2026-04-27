@@ -67,6 +67,32 @@ frappe.ui.form.on('Sales Order', {
         )
       }
     })
+
+    // === AUTO FILL CREDIT LIMIT ===
+    if (frm.doc.customer) {
+      frappe.call({
+        method: "frappe.client.get",
+        args: {
+          doctype: "Customer",
+          name: frm.doc.customer
+        },
+        callback: function (r) {
+          if (r.message) {
+            let credit_limits = r.message.credit_limits || [];
+            let company = frm.doc.company;
+            let row = credit_limits.find(d => d.company === company);
+
+            if (!row && credit_limits.length > 0) {
+              row = credit_limits[0];
+            }
+
+            frm.set_value("credit_limit", row ? row.credit_limit : 0);
+          }
+        }
+      });
+    } else {
+      frm.set_value("credit_limit", 0);
+    }
   },
 
   company(frm) {
