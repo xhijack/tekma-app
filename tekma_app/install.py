@@ -549,6 +549,12 @@ def update_fields():
         ],
         'Pick List' : [
             {
+                'fieldname': 'delivery_date',
+                'label': 'Delivery Date',
+                'fieldtype': 'Date',
+                'insert_after': 'customer_name'
+            },
+            {
                 'fieldname': 'urutan_rute',
                 'label': 'Urutan Rute',
                 'fieldtype': 'Int',
