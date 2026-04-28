@@ -12,11 +12,16 @@ frappe.ui.form.on('Sales Order', {
     }
 
     sync_tiang_tax(frm);
+    sync_sales_from_team(frm);
   },
 
   customer(frm) {
     frm._ar_loading = true;
     fetch_ar_summary(frm);
+
+    frm.set_value("sales", null);
+    frm.set_value("sales_team", []);
+
     if (frm.doc.customer) {
       frm.add_custom_button(__('History Tiang'), () => open_tiang_history_dialog(frm));
       frappe.call({
@@ -54,7 +59,8 @@ frappe.ui.form.on('Sales Order', {
       });
     }
 
-    if (!frm.doc.customer || frm.doc.metode_pembayaran_customer) return;
+    frm.set_value("metode_pembayaran_customer", null);
+    if (!frm.doc.customer) return;
     frappe.db.get_value(
       "Customer",
       frm.doc.customer,
@@ -67,6 +73,32 @@ frappe.ui.form.on('Sales Order', {
         )
       }
     })
+
+    // === AUTO FILL CREDIT LIMIT ===
+    if (frm.doc.customer) {
+      frappe.call({
+        method: "frappe.client.get",
+        args: {
+          doctype: "Customer",
+          name: frm.doc.customer
+        },
+        callback: function (r) {
+          if (r.message) {
+            let credit_limits = r.message.credit_limits || [];
+            let company = frm.doc.company;
+            let row = credit_limits.find(d => d.company === company);
+
+            if (!row && credit_limits.length > 0) {
+              row = credit_limits[0];
+            }
+
+            frm.set_value("credit_limit", row ? row.credit_limit : 0);
+          }
+        }
+      });
+    } else {
+      frm.set_value("credit_limit", 0);
+    }
   },
 
   company(frm) {
@@ -76,8 +108,43 @@ frappe.ui.form.on('Sales Order', {
 
   items_on_form_rendered(frm) {
     sync_tiang_tax(frm);
+  },
+
+  sales(frm) {
+    if (!frm.doc.sales) return;
+    sync_team_from_sales(frm);
   }
 });
+
+function sync_sales_from_team(frm) {
+  if (frm._syncing_sales) return;
+
+  const rows = frm.doc.sales_team || [];
+  const row = rows.find(d => d.sales_person);
+
+  frm._syncing_sales = true;
+
+  if (row && row.sales_person) {
+    frm.set_value("sales", row.sales_person);
+  } else {
+    frm.set_value("sales", null);
+  }
+
+  frm._syncing_sales = false;
+}
+
+function sync_team_from_sales(frm) {
+  if (frm._syncing_sales) return;
+
+  frm._syncing_sales = true;
+
+  (frm.doc.sales_team || []).forEach(row => {
+    row.sales_person = frm.doc.sales;
+  });
+
+  frm.refresh_field("sales_team");
+  frm._syncing_sales = false;
+}
 
 function fetch_ar_summary(frm) {
   const { customer, company } = frm.doc || {};

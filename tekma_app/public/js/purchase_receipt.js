@@ -256,8 +256,9 @@ frappe.ui.form.on('Purchase Receipt Item', {
     calculate_profit_difference(frm, cdt, cdn);
   },
 
-  item_code: function(frm, cdt, cdn) {
+  item_code: async function(frm, cdt, cdn) {
     calculate_profit_difference(frm, cdt, cdn);
+    await check_po_over_qty(frm, cdt, cdn);
   },
 
   rate: function(frm, cdt, cdn) {
@@ -266,8 +267,9 @@ frappe.ui.form.on('Purchase Receipt Item', {
     }, 300);
   },
 
-  qty: function(frm, cdt, cdn) {
+  qty: async function(frm, cdt, cdn) {
     calculate_profit_difference(frm, cdt, cdn);
+    await check_po_over_qty(frm, cdt, cdn);
   },
 
   amount: function(frm, cdt, cdn) {
@@ -275,6 +277,59 @@ frappe.ui.form.on('Purchase Receipt Item', {
   },
 });
 
+function check_po_over_qty(frm, cdt, cdn) {
+  const row = locals[cdt][cdn];
+  if (!row.purchase_order || !row.item_code) return;
+
+  const po_qty = flt(row.stock_qty || row.qty);
+  const received_qty = flt(row.received_qty || 0);
+  let current_qty = 0;
+
+  (frm.doc.items || []).forEach(d => {
+    if (
+      d.purchase_order === row.purchase_order &&
+      d.item_code === row.item_code
+    ) {
+      current_qty += flt(d.qty);
+    }
+  });
+
+  const total_after = received_qty + current_qty;
+
+  if (total_after > po_qty) {
+
+    if (!row._po_over_warned) {
+      row._po_over_warned = true;
+
+      const d = frappe.msgprint({
+        title: __('Warning Qty Over PO'),
+        message: __(
+          `Qty Total: <b>${total_after}</b><br>
+          Qty PO: <b>${po_qty}</b><br>
+          <span style="color:#d97706">
+            ➡ Over: <b>${total_after - po_qty}</b>
+          </span>`
+        ),
+        indicator: 'orange'
+      });
+
+      setTimeout(() => {
+        $(d.$wrapper).find('.modal-footer').hide();
+      }, 50);
+
+      setTimeout(() => {
+        $(d.$wrapper).on('click', function (e) {
+          if ($(e.target).hasClass('modal')) {
+            d.hide();
+          }
+        });
+      }, 50);
+    }
+
+  } else {
+    row._po_over_warned = false;
+  }
+}
 
 async function calculate_profit_difference(frm, cdt, cdn) {
   let row = locals[cdt] ? locals[cdt][cdn] : null;

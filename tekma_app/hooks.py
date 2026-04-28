@@ -50,7 +50,8 @@ doctype_js = {"Sales Order": "public/js/sales_order.js",
               "Purchase Order": "public/js/purchase_order.js",
             "Purchase Receipt": "public/js/purchase_receipt.js",
             "Purchase Invoice": "public/js/purchase_invoice.js",
-            "Stock Entry": "public/js/stock_entry.js"
+            "Stock Entry": "public/js/stock_entry.js",
+            "Pick List": "public/js/pick_list.js"
             }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -174,6 +175,9 @@ doc_events = {
         "validate": [
             "tekma_app.overrides.sales_order.validate"
         ]
+    },
+    "Pick List": {
+        "before_insert": "tekma_app.overrides.pick_list.set_delivery_date_from_so"
     }
 }
 
@@ -229,7 +233,7 @@ override_whitelisted_methods = {
 
 # Request Events
 # ----------------
-# before_request = ["tekma_app.utils.before_request"]
+before_request = ["tekma_app.monkey_patch.stock_ledger.patch"]
 after_migrate = ["tekma_app.install.update_fields"]
 
 # Job Events

@@ -95,6 +95,14 @@ def update_fields():
                 'options': 'Sales Person',
                 'insert_after': 'kasir'
             },
+            {
+                'fieldname': 'credit_limit',
+                'label': 'Credit Limit',
+                'fieldtype': 'Currency',
+                'insert_after': 'metode_pembayaran_customer',
+                'depends_on': 'eval:doc.customer',
+                'read_only': 1
+            }
         ],
         'Sales Order Item': [
             {
@@ -527,7 +535,7 @@ def update_fields():
                 'label': 'Jenis Paket',
                 'fieldtype': 'Select',
                 'insert_after': 'production_type',
-                'options': '\nSuper\nS Mix\nII Mix\nBrows'
+                'options': '\nSuper\nS Mix\nII Mix\nII Mix (B)\nBrows'
             }
         ],
         'Customer' : [
@@ -538,6 +546,35 @@ def update_fields():
                 'options': 'Mode of Payment',
                 'insert_after': 'customer_group'
             }
+        ],
+        'Pick List' : [
+            {
+                'fieldname': 'delivery_date',
+                'label': 'Delivery Date',
+                'fieldtype': 'Date',
+                'insert_after': 'customer_name'
+            },
+            {
+                'fieldname': 'urutan_rute',
+                'label': 'Urutan Rute',
+                'fieldtype': 'Int',
+                'reqd': 1,
+                'insert_after': 'for_qty'
+            },
+            {
+                'fieldname': 'packaging',
+                'label': 'Packaging',
+                'fieldtype': 'Select',
+                'reqd': 1,
+                'options': '\nPlastik\nKardus\nKeranjang\nStyrofoam',
+                'insert_after': 'urutan_rute'
+            },
+            {
+                'fieldname': 'catatan_untuk_gudang',
+                'label': 'Catatan untuk Gudang',
+                'fieldtype': 'Small Text',
+                'insert_after': 'ignore_pricing_rule'
+            },
         ]
     }
 
