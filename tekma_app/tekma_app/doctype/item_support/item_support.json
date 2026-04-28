@@ -22,13 +22,11 @@
    "reqd": 1
   },
   {
-   "fetch_from": "item.item_name",
    "fieldname": "item_name",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Item Name",
-   "options": "Item"
+   "label": "Item Name"
   },
   {
    "fieldname": "uom",
@@ -53,7 +51,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-03-09 16:37:08.632072",
+ "modified": "2026-04-28 15:43:22.731940",
  "modified_by": "Administrator",
  "module": "Tekma App",
  "name": "Item Support",
