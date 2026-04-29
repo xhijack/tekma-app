@@ -75,7 +75,7 @@ frappe.ui.form.on('Stock Entry', {
       return {
         filters: {
           production_type: frm.doc.stock_entry_type,
-          jenis_paket: frm.doc.jenis_paket,
+          jenis_batch: frm.doc.jenis_batch,
           is_can_use: 1,
           docstatus: 1  // Only submitted documents
         }
