@@ -761,3 +761,42 @@ def get_item_support(stock_entry_name):
                 "qty": qty
             }
     return list(item_support_dict.values())
+
+@frappe.whitelist()
+def get_remaining_qty_from_po(po, item_code):
+    if not po or not item_code:
+        return 0
+
+    po_item = frappe.db.get_value(
+        "Purchase Order Item",
+        {
+            "parent": po,
+            "item_code": item_code
+        },
+        ["qty"],
+        as_dict=1
+    )
+
+    if not po_item:
+        return 0
+
+    po_qty = po_item.qty or 0
+
+    received_qty = frappe.db.sql("""
+        SELECT SUM(pri.qty)
+        FROM `tabPurchase Receipt Item` pri
+        INNER JOIN `tabPurchase Receipt` pr
+            ON pr.name = pri.parent
+        WHERE
+            pri.purchase_order = %s
+            AND pri.item_code = %s
+            AND pr.docstatus = 1
+    """, (po, item_code))[0][0] or 0
+
+    remaining = po_qty - received_qty
+
+    return {
+        "po_qty": po_qty,
+        "received_qty": received_qty,
+        "remaining_qty": remaining
+    }
