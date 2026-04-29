@@ -66,22 +66,33 @@ frappe.ui.form.on('Stock Entry', {
     apply_prod_reference_query(frm);
     toggle_machine_fields(frm);
 
-    if (frm.doc.stock_entry_type === 'Mincer' || frm.doc.stock_entry_type === 'Mixer' || frm.doc.stock_entry_type === 'Flaker') {
-      frm.doc.from_bom = 1;
-      frm.doc.use_multi_level_bom = 0
-      frm.refresh_field('from_bom');
-      
-      frm.set_query('bom_no', function() {
-      return {
-        filters: {
-          production_type: frm.doc.stock_entry_type,
-          jenis_paket: frm.doc.jenis_paket,
-          docstatus: 1  // Only submitted documents
-        }
-      };
-    });
-      
+    const allowed = ['Mincer', 'Mixer', 'Flaker'];
+
+    if (!allowed.includes(frm.doc.stock_entry_type)) {
+      frm.set_query('bom_no', () => ({}));
+      return;
     }
+
+    frm.doc.from_bom = 1;
+    frm.doc.use_multi_level_bom = 0;
+    frm.refresh_field('from_bom');
+
+    frm.fields_dict.bom_no.get_query = function () {
+
+      let filters = {
+        production_type: frm.doc.stock_entry_type,
+        is_can_use: 1,
+        docstatus: 1
+      };
+
+      if (frm.doc.jenis_batch) {
+        filters.jenis_batch = frm.doc.jenis_batch;
+      }
+
+      return {
+        filters: filters
+      };
+    };
   },
 
   get_item_support(frm) {
