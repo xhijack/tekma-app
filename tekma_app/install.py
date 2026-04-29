@@ -397,10 +397,10 @@ def update_fields():
                 "depends_on": 'eval: doc.stock_entry_type=="Flaker" || doc.stock_entry_type=="Mincer" || doc.stock_entry_type=="Mixer"'
             },
             {
-                "fieldname": "jenis_paket",
-                "label": "Jenis Paket",
-                "fieldtype": "Select",
-                "options": "Super\nS Mix\nII Mix\nBrows",
+                "fieldname": "jenis_batch",
+                "label": "Jenis Batch",
+                "fieldtype": "Link",
+                "options": "Jenis Batch",
                 "insert_after": "asisten",
                 "depends_on": 'eval: doc.stock_entry_type=="Flaker" || doc.stock_entry_type=="Mincer" || doc.stock_entry_type=="Mixer"'
 
@@ -410,7 +410,7 @@ def update_fields():
                 "label": "Kode Bak",
                 "fieldtype": "Select",
                 "options": "A\nB\nC\nD\nE\nF\nG\nH\nI\nJ\nK\nL\nM\nN\nBLD",
-                "insert_after": "jenis_paket",
+                "insert_after": "jenis_batch",
                 "depends_on": 'eval: doc.stock_entry_type=="Flaker" || doc.stock_entry_type=="Mincer" || doc.stock_entry_type=="Mixer"'
 
             },
@@ -531,11 +531,19 @@ def update_fields():
                 'insert_after': 'item',
                 'options': '\nFlaker\nMincer\nMixer\nWrap'
             },{
-                'fieldname': 'jenis_paket',
-                'label': 'Jenis Paket',
-                'fieldtype': 'Select',
+                'fieldname': 'jenis_batch',
+                'label': 'Jenis Batch',
+                'fieldtype': 'Link',
                 'insert_after': 'production_type',
-                'options': '\nSuper\nS Mix\nII Mix\nII Mix (B)\nBrows'
+                'options': 'Jenis Batch'
+            },
+            {
+                'fieldname': 'is_can_use',
+                'label': 'Can Use',
+                'fieldtype': 'Check',
+                'in_list_view': 1,
+                'allow_on_submit': 1,
+                'insert_after': 'image'
             }
         ],
         'Customer' : [
