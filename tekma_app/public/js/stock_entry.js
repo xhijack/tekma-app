@@ -102,30 +102,35 @@ frappe.ui.form.on('Stock Entry', {
             stock_entry_name: frm.doc.name
         },
         callback: function(r) {
-            if (r.message) {
-                const items = r.message;
-                
-                items.forEach(item => {
-                    // Buat child row
-                    const new_row = frappe.model.add_child(frm.doc, 'items');
-                    
-                    // Set nilai wajib (mandatory fields)
-                    frappe.model.set_value(new_row.doctype, new_row.name, 'item_code', item.item);
-                    frappe.model.set_value(new_row.doctype, new_row.name, 'item_name', item.item_name);
-                    frappe.model.set_value(new_row.doctype, new_row.name, 'stock_uom', item.uom);
-                    frappe.model.set_value(new_row.doctype, new_row.name, 'qty', item.qty);
-                    
-                    // ✅ TAMBAHAN: Field mandatory yang kurang
-                    frappe.model.set_value(new_row.doctype, new_row.name, 'qty_as_per_stock_uom', item.qty);
-                    frappe.model.set_value(new_row.doctype, new_row.name, 'conversion_factor', 1);
-                    
-                    // Optional fields
-                    frappe.model.set_value(new_row.doctype, new_row.name, 'set_basic_rate_manually', 1);
+            if (!r.message || !r.message.length) return;
+
+            const items = r.message;
+            const missing_warehouse = items.filter(i => !i.s_warehouse).map(i => i.item);
+            if (missing_warehouse.length) {
+                frappe.msgprint({
+                    title: __('Default Warehouse Tidak Ditemukan'),
+                    message: __('Item berikut tidak memiliki default warehouse untuk company ini, kolom Source Warehouse akan kosong:<br><b>{0}</b>', [missing_warehouse.join('<br>')]),
+                    indicator: 'orange'
                 });
-                
-                frm.dirty();
-                frm.refresh_field('items');
             }
+
+            items.forEach(item => {
+                const new_row = frappe.model.add_child(frm.doc, 'items');
+                frappe.model.set_value(new_row.doctype, new_row.name, 'item_code', item.item);
+                frappe.model.set_value(new_row.doctype, new_row.name, 'item_name', item.item_name);
+                frappe.model.set_value(new_row.doctype, new_row.name, 'stock_uom', item.uom);
+                frappe.model.set_value(new_row.doctype, new_row.name, 'uom', item.uom);
+                frappe.model.set_value(new_row.doctype, new_row.name, 'qty', item.qty);
+                if (item.s_warehouse) {
+                    frappe.model.set_value(new_row.doctype, new_row.name, 's_warehouse', item.s_warehouse);
+                }
+                frappe.model.set_value(new_row.doctype, new_row.name, 'qty_as_per_stock_uom', item.qty);
+                frappe.model.set_value(new_row.doctype, new_row.name, 'conversion_factor', 1);
+                frappe.model.set_value(new_row.doctype, new_row.name, 'set_basic_rate_manually', 1);
+            });
+
+            frm.dirty();
+            frm.refresh_field('items');
         }
     });
 }
