@@ -26,7 +26,7 @@ def patch():
             "Delivery Note": "Delivery Note Item",
             "Sales Invoice": "Sales Invoice Item",
             "Stock Entry": "Stock Entry Detail",
-            "Stock Reconciliation": "Stock Reconciliation Item",
+            # "Stock Reconciliation": "Stock Reconciliation Item",
         }
 
         # kumpulkan voucher per type
