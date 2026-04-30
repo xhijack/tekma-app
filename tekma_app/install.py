@@ -397,6 +397,14 @@ def update_fields():
                 "depends_on": 'eval: doc.stock_entry_type=="Flaker" || doc.stock_entry_type=="Mincer" || doc.stock_entry_type=="Mixer"'
             },
             {
+                "fieldname": "asisten2",
+                "label": "Asisten 2",
+                "fieldtype": "Link",
+                "options": "Employee",
+                "insert_after": "asisten",
+                "depends_on": 'eval: doc.stock_entry_type=="Flaker"'
+            },
+            {
                 "fieldname": "jenis_batch",
                 "label": "Jenis Batch",
                 "fieldtype": "Link",
