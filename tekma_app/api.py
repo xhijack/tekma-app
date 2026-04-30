@@ -721,13 +721,7 @@ def get_prod_reference(doctype, txt, searchfield, start, page_len, filters):
 @frappe.whitelist()
 def get_item_support(stock_entry_name):
     stock_entry = frappe.get_doc("Stock Entry", stock_entry_name)
-    all_items_supports = []
-    for item in stock_entry.items:
-        if item.is_finished_item == 1:
-            item_supports = frappe.get_all("Item Support", filters={"parent": "Kebab 1 KG"}, fields=["item","item_name","uom","qty"])
-            all_items_supports.extend(item_supports)
-    # all_items_support di groupkan berdsarkan item dan dijumlahkan qty nya
-    item_support_dict = {}
+    company = stock_entry.company
 
     # build map of finished item qty from the Stock Entry
     finished_qty = {}
@@ -738,28 +732,46 @@ def get_item_support(stock_entry_name):
     if not finished_qty:
         return []
 
-    # fetch Item Support rows for all finished items (include parent to know multiplier)
+    # ambil default warehouse dari finished item (bukan support item)
+    # warehouse support item ikut parent finished item-nya
+    finished_item_codes = list(finished_qty.keys())
+    defaults = frappe.get_all(
+        "Item Default",
+        filters={"parent": ["in", finished_item_codes], "company": company},
+        fields=["parent", "default_warehouse"]
+    )
+    finished_warehouse_map = {d.parent: d.default_warehouse for d in defaults if d.default_warehouse}
+
+    # fetch Item Support rows untuk semua finished items
     item_supports = frappe.get_all(
         "Item Support",
-        filters={"parent": ["in", list(finished_qty.keys())]},
+        filters={"parent": ["in", finished_item_codes]},
         fields=["parent", "item", "item_name", "uom", "qty"]
     )
 
-    # aggregate and multiply support.qty by finished item qty
+    # aggregate dengan key (item_code, warehouse):
+    # - warehouse berbeda → baris terpisah
+    # - warehouse sama → qty digabung
+    item_support_dict = {}
     for s in item_supports:
         parent_item = s.get("parent")
         multiplier = finished_qty.get(parent_item, 0)
         qty = float(s.get("qty") or 0) * multiplier
-        key = s.get("item")
+        item_code = s.get("item")
+        warehouse = finished_warehouse_map.get(parent_item)
+
+        key = (item_code, warehouse)
         if key in item_support_dict:
             item_support_dict[key]["qty"] += qty
         else:
             item_support_dict[key] = {
-                "item": key,
+                "item": item_code,
                 "item_name": s.get("item_name"),
                 "uom": s.get("uom"),
-                "qty": qty
+                "qty": qty,
+                "s_warehouse": warehouse
             }
+
     return list(item_support_dict.values())
 
 @frappe.whitelist()
