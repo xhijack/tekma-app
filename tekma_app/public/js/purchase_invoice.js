@@ -405,7 +405,7 @@ function open_tiang_history_dialog(frm) {
       try {
         const party_links = await frappe.db.get_list('Party Link', {
           filters: { primary_role: 'Supplier', primary_party: supplier },
-          fields: ['secondary_party'],
+          fields: ['secondary_party','link_doctype'],
           limit: 0
         });
 

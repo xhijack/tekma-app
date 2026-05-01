@@ -125,7 +125,6 @@ frappe.ui.form.on('Stock Entry', {
                     frappe.model.set_value(new_row.doctype, new_row.name, 's_warehouse', item.s_warehouse);
                 }
                 frappe.model.set_value(new_row.doctype, new_row.name, 'qty_as_per_stock_uom', item.qty);
-                frappe.model.set_value(new_row.doctype, new_row.name, 'conversion_factor', 1);
                 frappe.model.set_value(new_row.doctype, new_row.name, 'set_basic_rate_manually', 1);
             });
 
