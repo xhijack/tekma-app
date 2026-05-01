@@ -405,12 +405,12 @@ function open_tiang_history_dialog(frm) {
       try {
         const party_links = await frappe.db.get_list('Party Link', {
           filters: { primary_role: 'Supplier', primary_party: supplier },
-          fields: ['secondary_party','link_doctype'],
+          fields: ['secondary_party','secondary_role'],
           limit: 0
         });
 
         const customers = (party_links || [])
-          .filter(pl => (pl.link_doctype || '').toLowerCase() === 'customer')
+          .filter(pl => (pl.secondary_role || '').toLowerCase() === 'customer')
           .map(pl => pl.secondary_party);
 
         if (customers.length) {
