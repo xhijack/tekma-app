@@ -613,17 +613,17 @@ function open_tiang_history_dialog(frm) {
         <div class="tiang-summary">
           
           <div class="sum-item">
-            <div class="sum-label">${__('DENGAN TIANG')}</div>
-            <div class="sum-value">
-              <span class="sum-amount">${fmtQty(dengan_qty)} ${fmtCurrency(dengan_amount)}</span>
-            </div>
+        <div class="sum-label">${__('DENGAN TIANG')}</div>
+        <div class="sum-value">
+          <span class="sum-amount">${fmtQty(dengan_qty)} ${fmtCurrency(Math.max(0, dengan_amount))}</span>
+        </div>
           </div>
 
           <div class="sum-item">
-            <div class="sum-label">${__('TUKAR TIANG')}</div>
-            <div class="sum-value">
-              <span class="sum-amount">${fmtQty(tukar_qty)} ${fmtCurrency(tukar_amount)}</span>
-            </div>
+        <div class="sum-label">${__('TUKAR TIANG')}</div>
+        <div class="sum-value">
+          <span class="sum-amount">${fmtQty(tukar_qty)} ${fmtCurrency(Math.max(0, tukar_amount))}</span>
+        </div>
           </div>
 
          
@@ -631,53 +631,53 @@ function open_tiang_history_dialog(frm) {
 
         <style>
           .tiang-summary {
-            margin-top: 14px;
-            padding-top: 10px;
-            border-top: 1px solid #e5e7eb;
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-            font-size: 12px;
+        margin-top: 14px;
+        padding-top: 10px;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        font-size: 12px;
           }
 
           .sum-item {
-            background: #fafafa;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            padding: 8px 12px;
-            width: 150px;
+        background: #fafafa;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 8px 12px;
+        width: 150px;
           }
 
           .sum-label {
-            font-size: 10px;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            margin-bottom: 3px;
+        font-size: 10px;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        margin-bottom: 3px;
           }
 
           .sum-value {
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
           }
 
           .sum-number {
-            font-size: 14px;
-            font-weight: 600;
-            color: #111;
+        font-size: 14px;
+        font-weight: 600;
+        color: #111;
           }
 
           .sum-amount {
-            font-size: 12px;
-            color: #444;
+        font-size: 12px;
+        color: #444;
           }
 
           .tiang-dialog table.table th,
           .tiang-dialog table.table td {
-            padding: 4px 8px;
-            vertical-align: middle;
-            font-size: 12px;
+        padding: 4px 8px;
+        vertical-align: middle;
+        font-size: 12px;
           }
         </style>
       `;
