@@ -114,19 +114,23 @@ frappe.ui.form.on('Stock Entry', {
                 });
             }
 
-            items.forEach(item => {
+            items.forEach(async (item) => {
                 const new_row = frappe.model.add_child(frm.doc, 'items');
-                frappe.model.set_value(new_row.doctype, new_row.name, 'item_code', item.item);
-                frappe.model.set_value(new_row.doctype, new_row.name, 'item_name', item.item_name);
-                frappe.model.set_value(new_row.doctype, new_row.name, 'stock_uom', item.uom);
-                frappe.model.set_value(new_row.doctype, new_row.name, 'uom', item.uom);
-                frappe.model.set_value(new_row.doctype, new_row.name, 'qty', item.qty);
-                if (item.s_warehouse) {
-                    frappe.model.set_value(new_row.doctype, new_row.name, 's_warehouse', item.s_warehouse);
-                }
-                frappe.model.set_value(new_row.doctype, new_row.name, 'qty_as_per_stock_uom', item.qty);
-                frappe.model.set_value(new_row.doctype, new_row.name, 'set_basic_rate_manually', 1);
+                
+                // Tunggu sampai trigger item_code selesai (termasuk fetch master item)
+                await frappe.model.set_value(new_row.doctype, new_row.name, 'item_code', item.item);
+                
+                // Setelah selesai, baru set value yang spesifik agar tidak ter-overwrite
+                frappe.model.set_value(new_row.doctype, new_row.name, {
+                    'item_name': item.item_name,
+                    'uom': item.uom,
+                    'qty': item.qty,
+                    's_warehouse': item.s_warehouse || new_row.s_warehouse,
+                    'qty_as_per_stock_uom': item.qty,
+                    'set_basic_rate_manually': 1
+                });
             });
+            frm.refresh_field('items');
 
             // frm.dirty();
             // frm.refresh_field('items');
