@@ -404,7 +404,7 @@ function open_tiang_history_dialog(frm) {
       let customerFilter = supplier;
       try {
         const party_links = await frappe.db.get_list('Party Link', {
-          filters: { primary_role: 'Supplier', primary_party: supplier, docstatus: 1 },
+          filters: { primary_role: 'Supplier', primary_party: supplier},
           fields: ['secondary_party','secondary_role'],
           limit: 0
         });
@@ -423,7 +423,7 @@ function open_tiang_history_dialog(frm) {
       // alert('customerFilter: ' + JSON.stringify(customerFilter));
 
       const rows = await frappe.db.get_list('History Tiang', {
-        filters: { customer: customerFilter },
+        filters: { customer: customerFilter, docstatus: 1 },
         fields: ['name', 'posting_date', 'document_type', 'document', 'qty','condition','rate','docstatus'],
         order_by: 'posting_date desc, creation desc',
         limit: limit
