@@ -128,8 +128,8 @@ frappe.ui.form.on('Stock Entry', {
                 frappe.model.set_value(new_row.doctype, new_row.name, 'set_basic_rate_manually', 1);
             });
 
-            frm.dirty();
-            frm.refresh_field('items');
+            // frm.dirty();
+            // frm.refresh_field('items');
         }
     });
 }
