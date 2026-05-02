@@ -622,7 +622,7 @@ function open_tiang_history_dialog(frm) {
             <td>${doc_link}</td>
             <td style="text-align:right">${fmtQty(r.qty)}</td>
             <td style="text-align:center">${frappe.utils.escape_html(r.condition || '')}</td>
-            <td style="text-align:right">${fmtCurrency(r.rate)}</td>
+            <td style="text-align:right">${fmtCurrency(Math.max(0, r.rate))}</td>
             <td style="text-align:center">${status}</td>
           </tr>
         `;
