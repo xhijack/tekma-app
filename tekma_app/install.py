@@ -432,6 +432,13 @@ def update_fields():
                 'read_only': 1,
             },
             {
+                'fieldname': 'rekening_pembayaran',
+                'label': 'Rekening Pembayaran',
+                'fieldtype': 'Link',
+                'options': 'Bank Account',
+                'insert_after': 'current_outstanding',
+            },
+            {
                 'fieldname': 'antar_jemput',
                 'label': 'Antar Jemput',
                 'fieldtype': 'Select',

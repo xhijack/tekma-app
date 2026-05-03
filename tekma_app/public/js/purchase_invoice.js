@@ -8,11 +8,28 @@ frappe.ui.form.on('Purchase Invoice', {
     if (frm.doc.supplier) {
       frm.add_custom_button(__('History Tiang'), () => open_tiang_history_dialog(frm));
     }
+    frm.set_query('rekening_pembayaran', () => ({
+      filters: { party_type: 'Supplier', party: frm.doc.supplier || '' }
+    }));
   },
 
   supplier(frm) {
     frm._ap_loading = true;
     fetch_ap_summary(frm);
+    frm.set_query('rekening_pembayaran', () => ({
+      filters: { party_type: 'Supplier', party: frm.doc.supplier || '' }
+    }));
+    if (frm.doc.supplier) {
+      frappe.db.get_list('Bank Account', {
+        filters: { party_type: 'Supplier', party: frm.doc.supplier },
+        fields: ['name'],
+        limit: 1
+      }).then(results => {
+        frm.set_value('rekening_pembayaran', results.length ? results[0].name : '');
+      });
+    } else {
+      frm.set_value('rekening_pembayaran', '');
+    }
   },
 
   company(frm) {
