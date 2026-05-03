@@ -206,6 +206,25 @@ def update_fields():
                 'options': 'Employee',
                 'insert_after': 'pic',
             },
+            {
+                'fieldname': 'antar_jemput',
+                'label': 'Antar Jemput',
+                'fieldtype': 'Select',
+                'options': '\nDiantar Vendor\nJemput Mandiri\nVia Kurir (mandiri)',
+                'insert_after': 'schedule_date',
+            },
+            {
+                'fieldname': 'lampiran',
+                'label': 'Lampiran',
+                'fieldtype': 'Attach',
+                'insert_after': 'antar_jemput',
+            },
+            {
+                'fieldname': 'catatan',
+                'label': 'Catatan',
+                'fieldtype': 'Small Text',
+                'insert_after': 'amended_from',
+            },
         ],
         'Delivery Note Item': [
             {
@@ -318,6 +337,25 @@ def update_fields():
                 'fieldtype': 'Currency',
                 'insert_after': 'supplier',
                 'read_only': 1,
+            },
+            {
+                'fieldname': 'antar_jemput',
+                'label': 'Antar Jemput',
+                'fieldtype': 'Select',
+                'options': '\nDiantar Vendor\nJemput Mandiri\nVia Kurir (mandiri)',
+                'insert_after': 'schedule_date',
+            },
+            {
+                'fieldname': 'lampiran',
+                'label': 'Lampiran',
+                'fieldtype': 'Attach',
+                'insert_after': 'antar_jemput',
+            },
+            {
+                'fieldname': 'catatan',
+                'label': 'Catatan',
+                'fieldtype': 'Small Text',
+                'insert_after': 'amended_from',
             },
         ],
         'Purchase Order Item': [
@@ -590,6 +628,25 @@ def update_fields():
                 'label': 'Catatan untuk Gudang',
                 'fieldtype': 'Small Text',
                 'insert_after': 'ignore_pricing_rule'
+            },
+            {
+                'fieldname': 'antar_jemput',
+                'label': 'Antar Jemput',
+                'fieldtype': 'Select',
+                'options': '\nDiantar Vendor\nJemput Mandiri\nVia Kurir (mandiri)',
+                'insert_after': 'schedule_date',
+            },
+            {
+                'fieldname': 'lampiran',
+                'label': 'Lampiran',
+                'fieldtype': 'Attach',
+                'insert_after': 'antar_jemput',
+            },
+            {
+                'fieldname': 'catatan',
+                'label': 'Catatan',
+                'fieldtype': 'Small Text',
+                'insert_after': 'amended_from',
             },
         ]
     }
