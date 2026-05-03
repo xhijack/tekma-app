@@ -732,15 +732,7 @@ def get_item_support(stock_entry_name):
     if not finished_qty:
         return []
 
-    # ambil default warehouse dari finished item (bukan support item)
-    # warehouse support item ikut parent finished item-nya
     finished_item_codes = list(finished_qty.keys())
-    defaults = frappe.get_all(
-        "Item Default",
-        filters={"parent": ["in", finished_item_codes], "company": company},
-        fields=["parent", "default_warehouse"]
-    )
-    finished_warehouse_map = {d.parent: d.default_warehouse for d in defaults if d.default_warehouse}
 
     # fetch Item Support rows untuk semua finished items
     item_supports = frappe.get_all(
@@ -748,6 +740,15 @@ def get_item_support(stock_entry_name):
         filters={"parent": ["in", finished_item_codes]},
         fields=["parent", "item", "item_name", "uom", "qty"]
     )
+
+    # ambil default warehouse dari support item itu sendiri
+    support_item_codes = list({s.get("item") for s in item_supports})
+    defaults = frappe.get_all(
+        "Item Default",
+        filters={"parent": ["in", support_item_codes], "company": company},
+        fields=["parent", "default_warehouse"]
+    )
+    support_warehouse_map = {d.parent: d.default_warehouse for d in defaults if d.default_warehouse}
 
     # aggregate dengan key (item_code, warehouse):
     # - warehouse berbeda → baris terpisah
@@ -758,7 +759,7 @@ def get_item_support(stock_entry_name):
         multiplier = finished_qty.get(parent_item, 0)
         qty = float(s.get("qty") or 0) * multiplier
         item_code = s.get("item")
-        warehouse = finished_warehouse_map.get(parent_item)
+        warehouse = support_warehouse_map.get(item_code)
 
         key = (item_code, warehouse)
         if key in item_support_dict:
