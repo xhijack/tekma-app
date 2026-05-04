@@ -177,7 +177,12 @@ doc_events = {
         ]
     },
     "Pick List": {
-        "before_insert": "tekma_app.overrides.pick_list.set_delivery_date_from_so"
+        "before_insert": [
+            "tekma_app.overrides.pick_list.set_delivery_date_from_so"
+        ],
+        "validate": [
+            "tekma_app.overrides.pick_list.set_keterangan"
+        ]
     }
 }
 
@@ -212,7 +217,8 @@ doc_events = {
 #
 override_whitelisted_methods = {
 	"erpnext.selling.doctype.sales_order.sales_order.make_delivery_note": "tekma_app.overrides.sales_order.make_delivery_note",
-    "erpnext.selling.doctype.sales_order.sales_order.make_sales_invoice": "tekma_app.overrides.sales_order.make_sales_invoice"
+    "erpnext.selling.doctype.sales_order.sales_order.make_sales_invoice": "tekma_app.overrides.sales_order.make_sales_invoice",
+    "erpnext.selling.doctype.delivery_note.delivery_note.make_sales_invoice": "tekma_app.overrides.sales_invoice.make_sales_invoice",
 }
 #
 # each overriding function accepts a `data` argument;

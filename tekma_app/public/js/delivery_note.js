@@ -1,7 +1,9 @@
 // Client Script: Sales Order
 
 frappe.ui.form.on('Delivery Note', {
-  
+  onload(frm) {
+    set_pick_list_remarks(frm);
+  },
 
   refresh(frm) {
     // Tambahkan tombol hanya jika tidak sedang loading dan outstanding > 0
@@ -19,6 +21,8 @@ frappe.ui.form.on('Delivery Note', {
         evt.preventDefault()
       }
     })
+
+    set_pick_list_remarks(frm);
   },
 
   customer(frm) {
@@ -56,6 +60,61 @@ frappe.ui.form.on('Delivery Note', {
     fetch_ar_summary(frm);
   },
 });
+
+async function set_pick_list_remarks(frm) {
+  if (frm.doc.remarks) return;
+  let sales_orders = new Set();
+
+  (frm.doc.items || []).forEach(row => {
+    if (row.against_sales_order) {
+      sales_orders.add(row.against_sales_order);
+    }
+  });
+
+  if (!sales_orders.size) return;
+
+  try {
+    const r = await frappe.call({
+      method: 'frappe.client.get_list',
+      args: {
+        doctype: 'Pick List',
+        fields: ['name', 'catatan_untuk_gudang', 'creation'],
+        filters: [
+          ['docstatus', '=', 1]
+        ],
+        order_by: 'creation desc',
+        limit_page_length: 5
+      }
+    });
+
+    let pick_lists = r.message || [];
+
+    for (let pl of pick_lists) {
+      let detail = await frappe.db.get_doc('Pick List', pl.name);
+      let match = false;
+
+      if (detail.sales_order && sales_orders.has(detail.sales_order)) {
+        match = true;
+      }
+
+      if (!match) {
+        (detail.locations || []).forEach(loc => {
+          if (sales_orders.has(loc.sales_order)) {
+            match = true;
+          }
+        });
+      }
+
+      if (match && detail.catatan_untuk_gudang) {
+        frm.set_value('remarks', detail.catatan_untuk_gudang);
+        break;
+      }
+    }
+
+  } catch (err) {
+    console.error('Gagal ambil Pick List:', err);
+  }
+}
 
 function fetch_ar_summary(frm) {
   const { customer, company } = frm.doc || {};

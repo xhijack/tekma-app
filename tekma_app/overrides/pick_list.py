@@ -1,4 +1,5 @@
 import frappe
+from frappe.utils import getdate
 
 def set_delivery_date_from_so(doc, method):
     if not doc.locations:
@@ -20,8 +21,20 @@ def set_delivery_date_from_so(doc, method):
     )
 
     # ✅ hanya warning, bukan block
-    if so_date and doc.delivery_date and doc.delivery_date != so_date:
-        frappe.msgprint(
-            f"Delivery Date berbeda dengan Sales Order ({so_date})",
-            indicator="orange"
-        )
+    if so_date and doc.delivery_date:
+        if getdate(doc.delivery_date) != getdate(so_date):
+            frappe.msgprint(
+                f"Delivery Date berbeda dengan Sales Order ({so_date})",
+                indicator="orange"
+            )
+        
+def set_keterangan(doc, method):
+    if doc.catatan_untuk_gudang:
+        return
+
+    for row in doc.locations or []:
+        if row.sales_order:
+            so = frappe.get_doc("Sales Order", row.sales_order)
+            if so.keterangan:
+                doc.catatan_untuk_gudang = so.keterangan
+            break

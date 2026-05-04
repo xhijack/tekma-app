@@ -1,7 +1,12 @@
 // Client Script: Sales Order
 
 frappe.ui.form.on('Sales Invoice', {
+  onload(frm) {
+    set_remarks_from_dn(frm);
+  },
   refresh(frm) {
+    set_remarks_from_dn(frm);
+
     // Tambahkan tombol hanya jika tidak sedang loading dan outstanding > 0
     if (!frm._ar_loading && Number(frm.doc.current_outstanding || 0) > 0) {
       frm.add_custom_button(__('Lihat Piutang'), () => open_ar_dialog(frm));
@@ -47,6 +52,26 @@ frappe.ui.form.on('Sales Invoice', {
     fetch_ar_summary(frm);
   },
 });
+
+function set_remarks_from_dn(frm) {
+  if (frm.doc.remarks) return;
+
+  let dn_list = [];
+
+  (frm.doc.items || []).forEach(row => {
+    if (row.delivery_note && !dn_list.includes(row.delivery_note)) {
+      dn_list.push(row.delivery_note);
+    }
+  });
+
+  if (!dn_list.length) return;
+
+  frappe.db.get_doc('Delivery Note', dn_list[0]).then(dn => {
+    if (dn.remarks) {
+      frm.set_value('remarks', dn.remarks);
+    }
+  });
+}
 
 function fetch_ar_summary(frm) {
   const { customer, company } = frm.doc || {};
