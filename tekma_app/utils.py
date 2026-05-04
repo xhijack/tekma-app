@@ -7,7 +7,7 @@ def get_terbilang(amount):
     t.parse(amount)
     return t.getresult()
 
-def create_stock_entry(doc, is_return=False):
+def create_stock_entry(doc, items, is_return=False):
     """
         `doc` is Delivery Note or Sales Invoice Document
     """
@@ -21,7 +21,7 @@ def create_stock_entry(doc, is_return=False):
     se.stock_entry_type = "Material Transfer"
     se.doc_reference = doc.name
     se.items = []
-    for item in doc.items:
+    for item in items:
         se.append("items", {
             "item_code": tiang_settings.item_tiang,
             "item_group": item.item_group,
@@ -36,7 +36,7 @@ def create_stock_entry(doc, is_return=False):
     frappe.msgprint("Tiang dikeluarkan")
 
 
-def create_stock_entry_issued(doc, is_return=False):
+def create_stock_entry_issued(doc, items, is_return=False):
     """
         `doc` is Delivery Note or Sales Invoice Document
     """
@@ -50,7 +50,7 @@ def create_stock_entry_issued(doc, is_return=False):
     se.stock_entry_type = "Material Receipt" if is_return else "Material Issue"
     se.doc_reference = doc.name
     se.items = []
-    for item in doc.items:
+    for item in items:
         se.append("items", {
             "item_code": tiang_settings.item_tiang,
             # "item_name": item.item_name,
@@ -65,11 +65,13 @@ def create_stock_entry_issued(doc, is_return=False):
 
 
 def move_tiang(doc):
-    for item in doc.items:
-        if item.tiang == "Tukar Tiang":
-            create_stock_entry(doc, doc.is_return)
-        elif item.tiang == "Dengan Tiang":
-            create_stock_entry_issued(doc, doc.is_return)
+    tukar_items = [item for item in doc.items if item.tiang == "Tukar Tiang"]
+    dengan_items = [item for item in doc.items if item.tiang == "Dengan Tiang"]
+
+    if tukar_items:
+        create_stock_entry(doc, tukar_items, doc.is_return)
+    if dengan_items:
+        create_stock_entry_issued(doc, dengan_items, doc.is_return)
 
 
 def cancel_stock_entry(doc):
