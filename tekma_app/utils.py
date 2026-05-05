@@ -207,6 +207,7 @@ import frappe
 from decimal import Decimal, ROUND_HALF_UP
 
 def _compute_core(finished_items, total_rm_cost, rounding=0):
+    
     total_rm_cost = Decimal(str(total_rm_cost))
     total_ratio_units = Decimal(0)
     norm = []
@@ -224,7 +225,7 @@ def _compute_core(finished_items, total_rm_cost, rounding=0):
 
     cpru = total_rm_cost / total_ratio_units  # cost per ratio-unit
     qz = "1" if not rounding else f"1.{'0'*int(rounding)}"
-
+    
     res = {}
     for it in norm:
         per_unit = (cpru * it["ratio"]).quantize(Decimal(qz), rounding=ROUND_HALF_UP)
@@ -269,7 +270,8 @@ def compute_valuation_rates(doc=None, rounding: int = 0, ratio_field: str = "rat
     for r in rm_rows:
         qty = Decimal(str(r.get("qty") or 0))
         rate = r.get("basic_rate") or r.get("valuation_rate") or r.get("rate") or 0
-        total_rm_cost += qty * Decimal(str(rate))
+        # print(qty, rate, qty*Decimal(str(rate)) * Decimal(str(r.get("conversion_factor"))))
+        total_rm_cost += qty*Decimal(str(rate)) * Decimal(str(r.get("conversion_factor")))
 
     if total_rm_cost <= 0:
         frappe.throw("Total biaya Raw Material = 0. Pastikan basic_rate/valuation_rate baris RM terisi.")
