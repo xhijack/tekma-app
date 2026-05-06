@@ -207,7 +207,6 @@ import frappe
 from decimal import Decimal, ROUND_HALF_UP
 
 def _compute_core(finished_items, total_rm_cost, rounding=0):
-    
     total_rm_cost = Decimal(str(total_rm_cost))
     total_ratio_units = Decimal(0)
     norm = []
@@ -224,20 +223,22 @@ def _compute_core(finished_items, total_rm_cost, rounding=0):
         frappe.throw("Total ratio units = 0, tidak bisa membagi biaya")
 
     cpru = total_rm_cost / total_ratio_units  # cost per ratio-unit
-    qz = "1" if not rounding else f"1.{'0'*int(rounding)}"
-    
+    # qz = "1" if not rounding else f"1.{'0'*int(rounding)}"
     res = {}
     for it in norm:
-        per_unit = (cpru * it["ratio"]).quantize(Decimal(qz), rounding=ROUND_HALF_UP)
-        total = (per_unit * it["qty"]).quantize(Decimal(qz), rounding=ROUND_HALF_UP)
+        # per_unit = (cpru * it["ratio"]).quantize(Decimal(qz))
+        # total = (per_unit * it["qty"]).quantize(Decimal(qz))
+        per_unit = (cpru * it["ratio"])
+        total = (per_unit * it["qty"])
         res[it["item_code"]] = {
             "qty": float(it["qty"]),
             "ratio": float(it["ratio"]),
             "valuation_rate": float(per_unit),
             "total_cost": float(total),
         }
-
+    print(total_rm_cost)
     sum_alloc = sum(v["total_cost"] for v in res.values())
+    print(sum_alloc)
     res["_meta"] = {
         "total_rm_cost": float(total_rm_cost),
         "sum_allocated": float(sum_alloc),
