@@ -181,7 +181,8 @@ def _validate_value_balance(doc):
     if doc.stock_entry_type in _EXCLUDED_FROM_BALANCE_CHECK:
         return
     diff = flt(doc.value_difference or 0)
-    if abs(diff) > 0.01:
+    
+    if not(-1 < abs(diff) < 1):
         frappe.throw(
             f"Stock Entry tipe <b>{doc.stock_entry_type}</b> harus balance "
             f"(nilai masuk = nilai keluar). Selisih saat ini: <b>{diff}</b>. "
@@ -286,9 +287,10 @@ def compute_valuation_rates(doc=None, rounding: int = 0, ratio_field: str = "rat
 
     total_rm_cost = Decimal(0)
     for r in rm_rows:
+        # print(r)
         qty = Decimal(str(r.get("qty") or 0))
         rate = r.get("basic_rate") or r.get("valuation_rate") or r.get("rate") or 0
-        # print(qty, rate, qty*Decimal(str(rate)) * Decimal(str(r.get("conversion_factor"))))
+        print(qty, frappe.format(rate, {"fieldtype": "Currency"}))
         total_rm_cost += qty*Decimal(str(rate)) * Decimal(str(r.get("conversion_factor")))
 
     if total_rm_cost <= 0:
