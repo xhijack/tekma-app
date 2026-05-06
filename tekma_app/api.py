@@ -707,6 +707,7 @@ def get_prod_reference(doctype, txt, searchfield, start, page_len, filters):
         FROM `tabStock Entry`
         WHERE
             docstatus = 1
+            AND is_open = 1
             AND stock_entry_type = %(stock_entry_type)s
             AND name LIKE %(txt)s
         ORDER BY posting_date DESC

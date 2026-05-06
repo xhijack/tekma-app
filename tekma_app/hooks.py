@@ -156,8 +156,8 @@ doc_events = {
 	},
     "Stock Entry": {
         "validate": "tekma_app.utils.stock_entry_on_validate",
-        "on_submit": "tekma_app.utils.stock_entry_on_submit",
-        "on_cancel": "tekma_app.utils.stock_entry_on_cancel",
+        "on_submit": ["tekma_app.utils.stock_entry_on_submit", "tekma_app.events.stock_entry.on_submit_stock_entry_production"],
+        "on_cancel": ["tekma_app.utils.stock_entry_on_cancel", "tekma_app.events.stock_entry.on_cancel_stock_entry_production"],
 	},
     "Purchase Invoice": {
         "on_submit": "tekma_app.utils.purchase_invoice_on_submit",
