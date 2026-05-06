@@ -1,4 +1,5 @@
 import frappe
+from frappe.utils import flt
 from terbilang import Terbilang
 
 
@@ -174,7 +175,23 @@ def calculate_basic_rate(docname):
     return respond
 
 
+_EXCLUDED_FROM_BALANCE_CHECK = {"Material Receipt", "Material Issue"}
+
+def _validate_value_balance(doc):
+    if doc.stock_entry_type in _EXCLUDED_FROM_BALANCE_CHECK:
+        return
+    diff = flt(doc.value_difference or 0)
+    if abs(diff) > 0.01:
+        frappe.throw(
+            f"Stock Entry tipe <b>{doc.stock_entry_type}</b> harus balance "
+            f"(nilai masuk = nilai keluar). Selisih saat ini: <b>{diff}</b>. "
+            "Pastikan semua baris sudah terisi basic_rate/valuation_rate dengan benar."
+        )
+
+
 def stock_entry_on_validate(doc, method):
+    _validate_value_balance(doc)
+
     if doc.stock_entry_type == "Wrap":
         total_qty = 0
         total_employee_qty = 0
