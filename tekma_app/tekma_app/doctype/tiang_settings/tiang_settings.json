@@ -7,7 +7,18 @@
  "field_order": [
   "customer_warehouse",
   "tiang_warehouse",
-  "item_tiang"
+  "column_break_cibx",
+  "item_tiang",
+  "accumulate",
+  "only_fg_item",
+  "section_break_sswl",
+  "dt_account",
+  "dt_stock_entry",
+  "dt_series",
+  "column_break_mtnx",
+  "tt_account",
+  "tt_stock_entry",
+  "tt_series"
  ],
  "fields": [
   {
@@ -36,13 +47,75 @@
    "label": "Tiang Warehouse",
    "options": "Warehouse",
    "reqd": 1
+  },
+  {
+   "fieldname": "dt_account",
+   "fieldtype": "Link",
+   "label": "Account Stock Adjusment (Dengan Tiang)",
+   "link_filters": "[[\"Account\",\"account_type\",\"=\",\"Stock Adjustment\"]]",
+   "options": "Account"
+  },
+  {
+   "fieldname": "dt_stock_entry",
+   "fieldtype": "Link",
+   "label": "Stock Entry Type (Dengan Tiang)",
+   "link_filters": "[[\"Stock Entry Type\",\"purpose\",\"in\",[\"Material Issue\",\"Material Transfer\"]]]",
+   "options": "Stock Entry Type"
+  },
+  {
+   "fieldname": "tt_account",
+   "fieldtype": "Link",
+   "label": "Account Stock Adjusment (Tukar Tiang)",
+   "link_filters": "[[\"Account\",\"account_type\",\"=\",\"Stock Adjustment\"]]",
+   "options": "Account"
+  },
+  {
+   "fieldname": "tt_stock_entry",
+   "fieldtype": "Link",
+   "label": "Stock Entry Type (Tukar Tiang)",
+   "link_filters": "[[\"Stock Entry Type\",\"purpose\",\"in\",[\"Material Transfer\",null]]]",
+   "options": "Stock Entry Type"
+  },
+  {
+   "default": "0",
+   "fieldname": "accumulate",
+   "fieldtype": "Check",
+   "label": "Accumulate Item"
+  },
+  {
+   "fieldname": "tt_series",
+   "fieldtype": "Select",
+   "label": "Series (Tukar Tiang)"
+  },
+  {
+   "fieldname": "column_break_cibx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_sswl",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_mtnx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "dt_series",
+   "fieldtype": "Select",
+   "label": "Series (Dengan Tiang)"
+  },
+  {
+   "default": "1",
+   "fieldname": "only_fg_item",
+   "fieldtype": "Check",
+   "label": "Only FG Item"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-02-03 09:25:29.003589",
+ "modified": "2026-05-19 09:46:05.510880",
  "modified_by": "Administrator",
  "module": "Tekma App",
  "name": "Tiang Settings",

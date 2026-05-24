@@ -48,8 +48,8 @@ def create_stock_entry_issued(doc, items, is_return=False):
     se.company = doc.company
     se.posting_date = doc.posting_date
     se.posting_time = doc.posting_time
-    se.stock_entry_type = "Material Receipt" if is_return else "Material Issue"
     se.doc_reference = doc.name
+    se.stock_entry_type = "Material Receipt" if is_return else "Material Issue"
     se.items = []
     for item in items:
         se.append("items", {
@@ -57,7 +57,8 @@ def create_stock_entry_issued(doc, items, is_return=False):
             # "item_name": item.item_name,
             "item_group": item.item_group,
             "qty": item.qty if not is_return else -item.qty,
-            "s_warehouse": tiang_settings.tiang_warehouse
+            "s_warehouse": tiang_settings.tiang_warehouse,
+            "t_warehouse": tiang_settings.tiang_warehouse
         })
     if se.items:
         se.insert()
@@ -73,6 +74,148 @@ def move_tiang(doc):
         create_stock_entry(doc, tukar_items, doc.is_return)
     if dengan_items:
         create_stock_entry_issued(doc, dengan_items, doc.is_return)
+
+from typing import Final
+
+DT: Final = "Dengan Tiang"
+TT: Final = "Tukar Tiang"
+
+
+def get_item_with_tiang(items, only_fg=True):
+    dt = []
+    tt = []
+
+    for item in items:
+        if only_fg and item.item_group != "FG":
+            continue
+
+        if item.tiang == DT:
+            dt.append(item)
+
+        elif item.tiang == TT:
+            tt.append(item)
+
+    return [
+        {"is_dt": True, "items": dt},
+        {"is_dt": False, "items": tt},
+    ]
+
+
+def make_movement_tiang(doc):
+    is_outgoing = not doc.is_return
+
+    settings = frappe.get_single("Tiang Settings")
+
+    item_tiang = settings.item_tiang
+    customer_warehouse = settings.customer_warehouse
+    tiang_warehouse = settings.tiang_warehouse
+    only_fg_item = settings.only_fg_item
+
+    dt_stock_entry = settings.dt_stock_entry
+    dt_account = settings.dt_account
+    dt_series = settings.dt_series
+
+    tt_stock_entry = settings.tt_stock_entry
+    tt_account = settings.tt_account
+    tt_series = settings.tt_series
+
+    # validation
+    if not all([
+        item_tiang,
+        customer_warehouse,
+        tiang_warehouse,
+    ]):
+        return
+
+    items_grouped = get_item_with_tiang(
+        doc.items,
+        only_fg_item
+    )
+
+    for group in items_grouped:
+        items = group.get("items")
+
+        if not items:
+            continue
+
+        is_dt = group.get("is_dt")
+
+        # default TT
+        stock_entry_type = tt_stock_entry
+        account = tt_account
+        naming_series = tt_series
+
+        s_warehouse = (
+            tiang_warehouse
+            if is_outgoing
+            else customer_warehouse
+        )
+
+        t_warehouse = (
+            customer_warehouse
+            if is_outgoing
+            else tiang_warehouse
+        )
+
+        to_customer = doc.customer if is_outgoing else None
+        from_customer = doc.customer if not is_outgoing else None
+
+        # DT override
+        if is_dt:
+            stock_entry_type = dt_stock_entry
+            account = dt_account
+            naming_series = dt_series
+
+            purpose = frappe.get_value(
+                "Stock Entry Type",
+                stock_entry_type,
+                "purpose"
+            )
+
+            # reverse issue saat return
+            if purpose == "Material Issue" and not is_outgoing:
+                purpose = "Material Receipt"
+                stock_entry_type = "Material Receipt"
+            s_warehouse = (
+                tiang_warehouse
+                if is_outgoing
+                else None
+            )
+
+            t_warehouse = (
+                None
+                if is_outgoing
+                else tiang_warehouse
+            )
+
+        else:
+            purpose = frappe.get_value(
+                "Stock Entry Type",
+                stock_entry_type,
+                "purpose"
+            )
+
+        # create stock entry
+        se = frappe.new_doc("Stock Entry")
+
+        se.stock_entry_type = stock_entry_type
+        se.purpose = purpose
+        se.naming_series = naming_series
+
+        se.from_bom = 0
+        se.company = doc.company
+        se.posting_date = doc.posting_date
+        se.posting_time = doc.posting_time
+
+        se.doc_reference = doc.name
+        se.customer = doc.customer
+
+        se.from_warehouse = s_warehouse
+        se.to_warehouse = t_warehouse
+
+        se.to_customer = to_customer
+        se.from_customer = from_customer
+
 
 
 def cancel_stock_entry(doc):
