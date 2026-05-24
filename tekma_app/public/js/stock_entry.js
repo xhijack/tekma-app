@@ -7,7 +7,7 @@ frappe.ui.form.on("Stock Entry", {
     if (
       ["Flaker", "Mixer", "Mincer", "Wrap"].includes(frm?.doc?.stock_entry_type)
     ) {
-      await update_ratio_valuation_rate(frm);
+      // await update_ratio_valuation_rate(frm);
     }
   },
   update_ratio_valuation_rate: update_ratio_valuation_rate,
@@ -86,7 +86,7 @@ frappe.ui.form.on("Stock Entry", {
             qty: item.qty,
             s_warehouse: item.s_warehouse || new_row.s_warehouse,
             qty_as_per_stock_uom: item.qty,
-            set_basic_rate_manually: 1,
+            // set_basic_rate_manually: 1,
           });
         });
         frm.refresh_field("items");
@@ -146,7 +146,7 @@ frappe.ui.form.on("Stock Entry Detail", {
   item_code(frm, cdt, cdn) {
     const row = frappe.get_doc(cdt, cdn);
     if (frm.doc.stock_entry_type === "Wrap") {
-      frappe.model.set_value(cdt, cdn, "set_basic_rate_manually", 1);
+      // frappe.model.set_value(cdt, cdn, "set_basic_rate_manually", 1);
     }
   },
 });
