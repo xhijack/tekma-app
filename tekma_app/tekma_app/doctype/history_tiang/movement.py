@@ -28,7 +28,6 @@ def cancel_log_history_tiang(doc):
         ht = frappe.get_doc("History Tiang", nm)
         ht.flags.ignore_permissions = True
         ht.cancel()
-    doc.flags.ignore_links = True
 
 
 
@@ -40,7 +39,7 @@ def validating_warehouse(doc, method):
     tiang_warehouse = settings.tiang_warehouse
     tt_stock_entry = settings.tt_stock_entry
 
-    if doc.stock_entry_type == tt_stock_entry and not doc.get("skip_validate_wh"):
+    if doc.stock_entry_type == tt_stock_entry and not doc.flags.skip_validate_wh:
         for item in doc.items:
             if item.item_code != item_tiang:
                 frappe.throw(f"Item yg dipilih tidak sesuai, harus: {item_tiang}",)
@@ -173,8 +172,8 @@ def make_movement_stock_tiang(doctype, doc):
         # create stock entry
         se = frappe.new_doc("Stock Entry")
         if not is_dt:
-            se.skip_validate_wh = True
-        se.skip_event_submit = True
+            se.flags.skip_validate_wh = True
+        se.flags.skip_event_submit = True
         se.stock_entry_type = stock_entry_type
         se.purpose = purpose
         se.naming_series = naming_series
@@ -201,7 +200,10 @@ def make_movement_stock_tiang(doctype, doc):
                 make_log_history_tiang(doc.customer, doc.posting_date, doc.doctype, doc.name, item.qty, TT if not is_dt else DT, item.tiang_rate if is_dt else None)
         else:
             qty = sum([item.qty for item in items])
-            rate = sum([item.tiang_rate * item.qty for item in items]) / qty
+            qty = qty if is_outgoing else qty * -1
+            rate = 0
+            if qty:
+                rate = sum([item.tiang_rate * item.qty for item in items]) / qty
             se.append("items", {
                     "item_code": item_tiang,
                     # "item_name": item.item_name,
@@ -216,7 +218,7 @@ def make_movement_stock_tiang(doctype, doc):
         se.insert()
         se.submit()
         
-        frappe.msgprint(f"Berhasil {"Mengeluarkan" if is_outgoing else "Mengembalikan"} Tiang", title="History Tiang")
+        frappe.msgprint(f"Berhasil {'Mengeluarkan' if is_outgoing else 'Mengembalikan'} Tiang", title="History Tiang")
         
 
 def delivery_note_on_submit(doc, method):
@@ -227,9 +229,7 @@ def delivery_note_on_submit(doc, method):
 
 
 def stock_entry_on_submit(doc, method):
-    if doc.get("skip_event_submit"):
-        del doc.skip_event_submit
-    else:
+    if not doc.flags.skip_event_submit:
         settings = frappe.get_single("Tiang Settings")
         tt_stock_entry = settings.tt_stock_entry
         if doc.stock_entry_type == tt_stock_entry:
@@ -290,10 +290,7 @@ def validate_get_tiang(customer, qty, condition="Dengan Tiang"):
         (customer, condition)
     )[0][0] or 0
 
-    try:
-        total_qty = float(total_qty)
-    except Exception:
-        total_qty = total_qty
+    total_qty = float(total_qty or 0)
     
     if total_qty < qty:
         frappe.throw(f"Stok tiang '{condition}' di pelanggan '{customer}' tidak dapat dibeli kembali. Tersedia: {total_qty}, dibutuhkan: {qty}")
