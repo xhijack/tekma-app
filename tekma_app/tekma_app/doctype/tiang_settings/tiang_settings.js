@@ -19,4 +19,12 @@ frappe.ui.form.on("Tiang Settings", {
             }
         })
 	},
+    dt_stock_entry(frm){
+        frm.set_value("dt_stock_entry_purpose", "")
+        frm.set_value("dt_stock_entry_against", "")
+        // frm.set_df_property("dt_stock_entry_against", "options", "")
+        frappe.db.get_doc("Stock Entry Type", frm.doc.dt_stock_entry).then(doc => {
+            frm.set_value("dt_stock_entry_purpose", doc.purpose)
+        })
+    }
 });

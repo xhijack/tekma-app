@@ -8,364 +8,7 @@ def get_terbilang(amount):
     t.parse(amount)
     return t.getresult()
 
-def create_stock_entry(doc, items, is_return=False):
-    """
-        `doc` is Delivery Note or Sales Invoice Document
-    """
-    tiang_settings = frappe.get_single("Tiang Settings")
-    se = frappe.new_doc("Stock Entry")
-    se.purpose = "Material Transfer"
-    se.from_bom = 0
-    se.company = doc.company
-    se.posting_date = doc.posting_date
-    se.posting_time = doc.posting_time
-    se.stock_entry_type = "Material Transfer"
-    se.doc_reference = doc.name
-    se.items = []
-    for item in items:
-        se.append("items", {
-            "item_code": tiang_settings.item_tiang,
-            "item_group": item.item_group,
-            "qty": item.qty if not is_return else -item.qty,
-            "s_warehouse": tiang_settings.tiang_warehouse if not is_return else tiang_settings.customer_warehouse,
-            "t_warehouse": tiang_settings.customer_warehouse if not is_return else tiang_settings.tiang_warehouse,
-            "to_customer": doc.customer if not is_return else None,
-            "customer": doc.customer if is_return else None,
-        })
-    se.insert()
-    se.submit()
-    frappe.msgprint("Tiang dikeluarkan")
-
-
-def create_stock_entry_issued(doc, items, is_return=False):
-    """
-        `doc` is Delivery Note or Sales Invoice Document
-    """
-    tiang_settings = frappe.get_single("Tiang Settings")
-    se = frappe.new_doc("Stock Entry")
-    se.purpose = "Material Issue"
-    se.from_bom = 0
-    se.company = doc.company
-    se.posting_date = doc.posting_date
-    se.posting_time = doc.posting_time
-    se.doc_reference = doc.name
-    se.stock_entry_type = "Material Receipt" if is_return else "Material Issue"
-    se.items = []
-    for item in items:
-        se.append("items", {
-            "item_code": tiang_settings.item_tiang,
-            # "item_name": item.item_name,
-            "item_group": item.item_group,
-            "qty": item.qty if not is_return else -item.qty,
-            "s_warehouse": tiang_settings.tiang_warehouse,
-            "t_warehouse": tiang_settings.tiang_warehouse
-        })
-    if se.items:
-        se.insert()
-        se.submit()
-        frappe.msgprint("Tiang dikeluarkan") if not is_return else "Tiang dikembalikan"
-
-
-def move_tiang(doc):
-    tukar_items = [item for item in doc.items if item.tiang == "Tukar Tiang"]
-    dengan_items = [item for item in doc.items if item.tiang == "Dengan Tiang"]
-
-    if tukar_items:
-        create_stock_entry(doc, tukar_items, doc.is_return)
-    if dengan_items:
-        create_stock_entry_issued(doc, dengan_items, doc.is_return)
-
-from typing import Final
-
-DT: Final = "Dengan Tiang"
-TT: Final = "Tukar Tiang"
-
-
-def get_item_with_tiang(items, only_fg=True):
-    dt = []
-    tt = []
-
-    for item in items:
-        if only_fg and item.item_group != "FG":
-            continue
-
-        if item.tiang == DT:
-            dt.append(item)
-
-        elif item.tiang == TT:
-            tt.append(item)
-
-    return [
-        {"is_dt": True, "items": dt},
-        {"is_dt": False, "items": tt},
-    ]
-
-
-def make_movement_tiang(doc):
-    is_outgoing = not doc.is_return
-
-    settings = frappe.get_single("Tiang Settings")
-
-    item_tiang = settings.item_tiang
-    customer_warehouse = settings.customer_warehouse
-    tiang_warehouse = settings.tiang_warehouse
-    only_fg_item = settings.only_fg_item
-
-    dt_stock_entry = settings.dt_stock_entry
-    dt_account = settings.dt_account
-    dt_series = settings.dt_series
-
-    tt_stock_entry = settings.tt_stock_entry
-    tt_account = settings.tt_account
-    tt_series = settings.tt_series
-
-    # validation
-    if not all([
-        item_tiang,
-        customer_warehouse,
-        tiang_warehouse,
-    ]):
-        return
-
-    items_grouped = get_item_with_tiang(
-        doc.items,
-        only_fg_item
-    )
-
-    for group in items_grouped:
-        items = group.get("items")
-
-        if not items:
-            continue
-
-        is_dt = group.get("is_dt")
-
-        # default TT
-        stock_entry_type = tt_stock_entry
-        account = tt_account
-        naming_series = tt_series
-
-        s_warehouse = (
-            tiang_warehouse
-            if is_outgoing
-            else customer_warehouse
-        )
-
-        t_warehouse = (
-            customer_warehouse
-            if is_outgoing
-            else tiang_warehouse
-        )
-
-        to_customer = doc.customer if is_outgoing else None
-        from_customer = doc.customer if not is_outgoing else None
-
-        # DT override
-        if is_dt:
-            stock_entry_type = dt_stock_entry
-            account = dt_account
-            naming_series = dt_series
-
-            purpose = frappe.get_value(
-                "Stock Entry Type",
-                stock_entry_type,
-                "purpose"
-            )
-
-            # reverse issue saat return
-            if purpose == "Material Issue" and not is_outgoing:
-                purpose = "Material Receipt"
-                stock_entry_type = "Material Receipt"
-            s_warehouse = (
-                tiang_warehouse
-                if is_outgoing
-                else None
-            )
-
-            t_warehouse = (
-                None
-                if is_outgoing
-                else tiang_warehouse
-            )
-
-        else:
-            purpose = frappe.get_value(
-                "Stock Entry Type",
-                stock_entry_type,
-                "purpose"
-            )
-
-        # create stock entry
-        se = frappe.new_doc("Stock Entry")
-
-        se.stock_entry_type = stock_entry_type
-        se.purpose = purpose
-        se.naming_series = naming_series
-
-        se.from_bom = 0
-        se.company = doc.company
-        se.posting_date = doc.posting_date
-        se.posting_time = doc.posting_time
-
-        se.doc_reference = doc.name
-        se.customer = doc.customer
-
-        se.from_warehouse = s_warehouse
-        se.to_warehouse = t_warehouse
-
-        se.to_customer = to_customer
-        se.from_customer = from_customer
-
-
-
-def cancel_stock_entry(doc):
-    se = frappe.get_all("Stock Entry", filters={"doc_reference": doc.name}, fields=["name"])
-    for s in se:
-        stock_entry = frappe.get_doc("Stock Entry", s.name)
-        stock_entry.cancel()
-
-
-def log_history_tiang(doc):
-    for item in doc.items:
-        if item.tiang in ["Dengan Tiang","Tukar Tiang"]:
-            ht = frappe.new_doc("History Tiang")
-            ht.customer = doc.customer
-            ht.date = doc.posting_date
-            ht.document_type = doc.doctype
-            ht.document = doc.name
-            ht.rate = item.tiang_rate
-            ht.qty = item.qty # sum([item.qty for item in doc.items if item.tiang in ["Dengan Tiang","Tukar Tiang"]])
-            ht.condition = item.tiang
-            ht.insert()
-            ht.submit()
-
-def log_tiang(customer, posting_date, doctype, docname, qty, condition, rate):
-    ht = frappe.new_doc('History Tiang')
-    ht.customer = customer
-    ht.date = posting_date
-    ht.document_type = doctype
-    ht.document = docname
-    ht.rate = rate
-    ht.qty = qty
-    ht.condition = condition
-    ht.insert()
-    ht.submit()
-
-
-def cancel_log_history_tiang(doc):
-    ht_names = frappe.get_all("History Tiang",
-        filters={"document": doc.name, "docstatus": 1},
-        pluck="name"
-    )
-    for nm in ht_names:
-        ht = frappe.get_doc("History Tiang", nm)
-        ht.flags.ignore_permissions = True
-        ht.cancel()
-    doc.flags.ignore_links = True
-
-
-def delivery_note_on_submit(doc, method):
-    move_tiang(doc)
-    log_history_tiang(doc)
-
-
-def delivery_note_on_cancel(doc, method):
-    cancel_stock_entry(doc)
-    cancel_log_history_tiang(doc)
-    # cancel_linked_history_tiang(doc)
-
-
-def sales_invoice_on_submit(doc, method):
-    if doc.update_stock:
-        move_tiang(doc)
-        log_history_tiang(doc)
-        
-
-def sales_invoice_on_cancel(doc, method):
-    if doc.update_stock:
-        cancel_stock_entry(doc)
-        cancel_log_history_tiang(doc)
-
-
-def validate_ratio_for_valuation_rate_stock_entry(doc):
-    total_ratio = 0
-    for item in doc.items:
-        item_detail = frappe.get_doc("Item", item.item_code)
-        if item_detail.ratio != 0 and item.is_finished_item:
-            total_ratio += item_detail.ratio * item.qty
-
-    for item in doc.items:
-        item_detail = frappe.get_doc("Item", item.item_code)
-        if item_detail.ratio != 0 and item.is_finished_item:
-            item.basic_rate = (doc.total_outgoing_value / total_ratio) * item_detail.ratio
-
-
-def calculate_basic_rate(docname):
-    doc = frappe.get_doc("Stock Entry", docname)
-    respond = []
-    total_ratio = 0
-    for item in doc.items:
-        item_detail = frappe.get_doc("Item", item.item_code)
-        if item_detail.ratio != 0 and item.is_finished_item:
-            total_ratio += item_detail.ratio * item.qty
-
-    for item in doc.items:
-        item_detail = frappe.get_doc("Item", item.item_code)
-        if item_detail.ratio != 0 and item.is_finished_item:
-            item.basic_rate = (doc.total_outgoing_value / total_ratio) * item_detail.ratio
-            respond.append({'item_code': item.item_code, 'basic_rate': item.basic_rate})
-    
-    return respond
-
-
-_EXCLUDED_FROM_BALANCE_CHECK = {"Material Receipt", "Material Issue"}
-
-def _validate_value_balance(doc):
-    if doc.stock_entry_type in _EXCLUDED_FROM_BALANCE_CHECK:
-        return
-    diff = flt(doc.value_difference or 0)
-    
-    if not(-1 < abs(diff) < 1):
-        frappe.throw(
-            f"Stock Entry tipe <b>{doc.stock_entry_type}</b> harus balance "
-            f"(nilai masuk = nilai keluar). Selisih saat ini: <b>{diff}</b>. "
-            "Pastikan semua baris sudah terisi basic_rate/valuation_rate dengan benar."
-        )
-
-
-def stock_entry_on_validate(doc, method):
-    _validate_value_balance(doc)
-
-    if doc.stock_entry_type == "Wrap":
-        total_qty = 0
-        total_employee_qty = 0
-        for item in doc.items:
-            if item.is_finished_item:
-                total_qty += item.qty
-
-        for item in doc.employee_log:
-            total_employee_qty += item.qty
-        
-        doc.difference_qty = total_qty - total_employee_qty
-    elif doc.stock_entry_type == "Tukar Tiang":
-        for item in doc.items:
-            if item.customer is None:
-                frappe.throw("Customer Harus di isi untuk menggunakan Stock Entry berjenis Tukar Tiang")
-            if item.s_warehouse != "Pelanggan - MK":
-                frappe.throw("Gudang Source Warehouse harus Pelanggan")
-
-def stock_entry_on_submit(doc, method):
-    if doc.stock_entry_type == 'Tukar Tiang':
-        for item in doc.items:
-            log_tiang(customer=item.customer, posting_date=doc.posting_date, doctype="Stock Entry", docname=doc.name, qty=-item.qty, condition="Tukar Tiang", rate=item.basic_rate)
-
-
-def stock_entry_on_cancel(doc, method):
-    cancel_log_history_tiang(doc)
-
-# tekma_app/utils.py
-import frappe
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal
 
 def _compute_core(finished_items, total_rm_cost, rounding=0):
     total_rm_cost = Decimal(str(total_rm_cost))
@@ -470,59 +113,6 @@ def compute_valuation_rates(doc=None, rounding: int = 0, ratio_field: str = "rat
     return _compute_core(finished, total_rm_cost, rounding=int(rounding or 0))
 
 
-def purchase_invoice_on_submit(doc, method):
-    tiang_settings = frappe.get_single("Tiang Settings")
-    party_links = frappe.get_list("Party Link",filters={"primary_party": doc.supplier, "primary_role": "Supplier"})
-    if len(party_links) == 0:
-        return
-    customer_name = frappe.db.get_value("Party Link", party_links[0].name, "secondary_party")
-    if doc.update_stock == 1:
-        for item in doc.items:
-            if item.item_code == tiang_settings.item_tiang:
-                validate_get_tiang(customer_name, item.qty, condition="Dengan Tiang")
-                log_tiang(customer=customer_name, posting_date=doc.posting_date, doctype="Purchase Invoice",docname=doc.name,qty=-item.qty, condition="Dengan Tiang", rate=item.rate)
-
-def purchase_receipt_on_submit(doc, method):
-    tiang_settings = frappe.get_single("Tiang Settings")
-    party_links = frappe.get_list("Party Link",filters={"primary_party": doc.supplier, "primary_role": "Supplier"})
-    if len(party_links) == 0:
-        return
-    customer_name = frappe.db.get_value("Party Link", party_links[0].name, "secondary_party")
-
-    for item in doc.items:
-        if item.item_code == tiang_settings.item_tiang:
-            validate_get_tiang(customer_name, item.qty, condition="Dengan Tiang")
-            log_tiang(customer=customer_name, posting_date=doc.posting_date, doctype="Purchase Receipt",docname=doc.name,qty=-item.qty, condition="Dengan Tiang", rate=item.rate)
-
-def validate_get_tiang(customer, qty, condition="Dengan Tiang"):
-    """
-    Return total qty of History Tiang for a given customer with condition "Dengan Tiang".
-    """
-    if not customer:
-        frappe.throw("Customer wajib diisi")
-
-    total_qty = frappe.db.sql(
-        """
-        SELECT COALESCE(SUM(qty), 0)
-        FROM `tabHistory Tiang`
-        WHERE customer = %s
-          AND `condition` = %s
-          AND docstatus = 1
-        """,
-        (customer, condition)
-    )[0][0] or 0
-
-    try:
-        total_qty = float(total_qty)
-    except Exception:
-        total_qty = total_qty
-    
-    if total_qty < qty:
-        frappe.throw(f"Stok tiang '{condition}' di pelanggan '{customer}' tidak dapat dibeli kembali. Tersedia: {total_qty}, dibutuhkan: {qty}")
-
-def purchase_invoice_on_cancel(doc, method):
-    cancel_log_history_tiang(doc)
-
 def sales_order_autofill_pembayaran(doc, method):
     if doc.customer and not doc.metode_pembayaran_customer:
         metode = frappe.db.get_value(
@@ -532,3 +122,33 @@ def sales_order_autofill_pembayaran(doc, method):
         )
         if metode:
             doc.metode_pembayaran_customer = metode
+            
+_EXCLUDED_FROM_BALANCE_CHECK = {"Material Receipt", "Material Issue"}
+
+def _validate_value_balance(doc):
+    if doc.purpose in _EXCLUDED_FROM_BALANCE_CHECK:
+        return
+    diff = flt(doc.value_difference or 0)
+    
+    if not(-1 < abs(diff) < 1):
+        frappe.throw(
+            f"Stock Entry tipe <b>{doc.stock_entry_type}</b> harus balance "
+            f"(nilai masuk = nilai keluar). Selisih saat ini: <b>{diff}</b>. "
+            "Pastikan semua baris sudah terisi basic_rate/valuation_rate dengan benar."
+        )
+
+
+def stock_entry_on_validate(doc, method):
+    _validate_value_balance(doc)
+
+    if doc.stock_entry_type == "Wrap":
+        total_qty = 0
+        total_employee_qty = 0
+        for item in doc.items:
+            if item.is_finished_item:
+                total_qty += item.qty
+
+        for item in doc.employee_log:
+            total_employee_qty += item.qty
+        
+        doc.difference_qty = total_qty - total_employee_qty

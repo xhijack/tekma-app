@@ -1,4 +1,6 @@
 import frappe
+
+# Handle stock entry prduksi untuk menandai refrensi dokumen sudah digunakan
 def on_submit_stock_entry_production(doc, method):
     update_is_open(doc, 0)
 

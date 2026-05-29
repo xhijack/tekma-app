@@ -14,6 +14,8 @@
   "section_break_sswl",
   "dt_account",
   "dt_stock_entry",
+  "dt_stock_entry_purpose",
+  "dt_stock_entry_against",
   "dt_series",
   "column_break_mtnx",
   "tt_account",
@@ -109,13 +111,29 @@
    "fieldname": "only_fg_item",
    "fieldtype": "Check",
    "label": "Only FG Item"
+  },
+  {
+   "fieldname": "dt_stock_entry_purpose",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Purpose Stock Entry Type (Dengan Tiang)",
+   "options": "Stock Entry Type"
+  },
+  {
+   "depends_on": "eval:doc.dt_stock_entry_purpose == \"Material Issue\"",
+   "description": "Digunakan ketika melakukan Sales Return",
+   "fieldname": "dt_stock_entry_against",
+   "fieldtype": "Link",
+   "label": "Stock Entry Type (Againts Dengan Tiang)",
+   "link_filters": "[[\"Stock Entry Type\",\"purpose\",\"in\",[\"Material Receipt\"]]]",
+   "options": "Stock Entry Type"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-05-19 09:46:05.510880",
+ "modified": "2026-05-29 23:52:16.409468",
  "modified_by": "Administrator",
  "module": "Tekma App",
  "name": "Tiang Settings",
