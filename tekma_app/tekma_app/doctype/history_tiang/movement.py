@@ -224,6 +224,9 @@ def make_movement_stock_tiang(doctype, doc):
 def delivery_note_on_submit(doc, method):
     make_movement_stock_tiang("Delivery Note", doc)
 
+def sales_invoice_on_submit(doc, method):
+    make_movement_stock_tiang("Sales Invoice", doc)
+
 # def delivery_note_on_cancel(doc, method):
 #     cancel_log_history_tiang(doc)
 
