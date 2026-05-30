@@ -155,7 +155,7 @@ doc_events = {
 		# "on_cancel": "tekma_app.utils.sales_invoice_on_cancel"
 	},
     "Stock Entry": {
-        "validate": ["tekma_app.tekma_app.doctype.history_tiang.movement.validating_warehouse", "tekma_app.utils.stock_entry_on_validate"],
+        "validate": ["tekma_app.tekma_app.doctype.history_tiang.movement.validating_warehouse", "tekma_app.events.stock_entry_production.stock_entry_on_validate"],
         "on_submit": ["tekma_app.tekma_app.doctype.history_tiang.movement.stock_entry_on_submit", "tekma_app.events.stock_entry_production.on_submit_stock_entry_production"],
         "on_cancel": ["tekma_app.events.stock_entry_production.on_cancel_stock_entry_production"],
 	},

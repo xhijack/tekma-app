@@ -123,32 +123,3 @@ def sales_order_autofill_pembayaran(doc, method):
         if metode:
             doc.metode_pembayaran_customer = metode
             
-_EXCLUDED_FROM_BALANCE_CHECK = {"Material Receipt", "Material Issue"}
-
-def _validate_value_balance(doc):
-    if doc.purpose in _EXCLUDED_FROM_BALANCE_CHECK:
-        return
-    diff = flt(doc.value_difference or 0)
-    
-    if not(-1 < abs(diff) < 1):
-        frappe.throw(
-            f"Stock Entry tipe <b>{doc.stock_entry_type}</b> harus balance "
-            f"(nilai masuk = nilai keluar). Selisih saat ini: <b>{diff}</b>. "
-            "Pastikan semua baris sudah terisi basic_rate/valuation_rate dengan benar."
-        )
-
-
-def stock_entry_on_validate(doc, method):
-    _validate_value_balance(doc)
-
-    if doc.stock_entry_type == "Wrap":
-        total_qty = 0
-        total_employee_qty = 0
-        for item in doc.items:
-            if item.is_finished_item:
-                total_qty += item.qty
-
-        for item in doc.employee_log:
-            total_employee_qty += item.qty
-        
-        doc.difference_qty = total_qty - total_employee_qty
