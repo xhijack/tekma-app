@@ -147,25 +147,25 @@ jinja = {
 
 doc_events = {
 	"Delivery Note": {
-		"on_submit": "tekma_app.utils.delivery_note_on_submit",
-        "on_cancel": "tekma_app.utils.delivery_note_on_cancel"
+		"on_submit": "tekma_app.tekma_app.doctype.history_tiang.movement.delivery_note_on_submit",
+        # "on_cancel": "tekma_app.tekma_app.doctype.history_tiang.movement.delivery_note_on_cancel"
 	},
     "Sales Invoice": {
         "on_submit": "tekma_app.utils.sales_invoice_on_submit",
 		"on_cancel": "tekma_app.utils.sales_invoice_on_cancel"
 	},
     "Stock Entry": {
-        # "validate": "tekma_app.utils.stock_entry_on_validate",
-        "on_submit": ["tekma_app.utils.stock_entry_on_submit", "tekma_app.events.stock_entry.on_submit_stock_entry_production", "tekma_app.utils.stock_entry_on_validate"],
-        "on_cancel": ["tekma_app.utils.stock_entry_on_cancel", "tekma_app.events.stock_entry.on_cancel_stock_entry_production"],
+        "validate": ["tekma_app.tekma_app.doctype.history_tiang.movement.validating_warehouse", "tekma_app.utils.stock_entry_on_validate"],
+        "on_submit": ["tekma_app.tekma_app.doctype.history_tiang.movement.stock_entry_on_submit", "tekma_app.events.stock_entry_production.on_submit_stock_entry_production"],
+        "on_cancel": ["tekma_app.events.stock_entry_production.on_cancel_stock_entry_production"],
 	},
     "Purchase Invoice": {
-        "on_submit": "tekma_app.utils.purchase_invoice_on_submit",
-        "on_cancel": "tekma_app.utils.purchase_invoice_on_cancel"
+        "on_submit": "tekma_app.tekma_app.doctype.history_tiang.movement.purchase_invoice_on_submit",
+        "on_cancel": "tekma_app.tekma_app.doctype.history_tiang.movement.purchase_invoice_on_cancel"
     },
      "Purchase Receipt": {
-        "on_submit": "tekma_app.utils.purchase_receipt_on_submit",
-        "on_cancel": "tekma_app.utils.purchase_invoice_on_cancel"
+        "on_submit": "tekma_app.tekma_app.doctype.history_tiang.movement.purchase_receipt_on_submit",
+        "on_cancel": "tekma_app.tekma_app.doctype.history_tiang.movement.purchase_receipt_on_cancel"
     },
     "Sales Order": {
         "before_save": [
