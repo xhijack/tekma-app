@@ -18,6 +18,7 @@
   "dt_stock_entry_against",
   "dt_series",
   "column_break_mtnx",
+  "tt_allow_negative",
   "tt_account",
   "tt_stock_entry",
   "tt_series"
@@ -127,13 +128,19 @@
    "label": "Stock Entry Type (Againts Dengan Tiang)",
    "link_filters": "[[\"Stock Entry Type\",\"purpose\",\"in\",[\"Material Receipt\"]]]",
    "options": "Stock Entry Type"
+  },
+  {
+   "default": "0",
+   "fieldname": "tt_allow_negative",
+   "fieldtype": "Check",
+   "label": "Allow Negative Tukar Tiang"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-05-29 23:52:16.409468",
+ "modified": "2026-05-31 06:40:50.243640",
  "modified_by": "Administrator",
  "module": "Tekma App",
  "name": "Tiang Settings",

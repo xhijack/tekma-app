@@ -7,16 +7,22 @@ from frappe.model.document import Document
 
 class HistoryTiang(Document):
 	def on_cancel(doc):
-		if doc.document_type != "Stock Entry":
-			total = get_total(doc.customer, doc.condition)
-			if  total < 0.0:
-				frappe.throw(f"Can't Cancel History Tiang <b>{doc.condition}</b>, is insufficient <b>{str(total)}</b>")
+		tt_allow_negative = frappe.get_single_value("Tiang Settings", "tt_allow_negative")
+		total = get_total(doc.customer, doc.condition)
+		if tt_allow_negative and doc.condition == "Tukar Tiang" and total < 0.0:
+			return frappe.msgprint(f"History Tiang <b>{doc.condition}</b>, is insufficient <b>{str(total)}</b>")	
+		
+		if total < 0.0:
+			frappe.throw(f"Can't Submit History Tiang <b>{doc.condition}</b>, is insufficient <b>{str(total)}</b>")
 
 	def on_submit(doc):
-		if doc.document_type == "Stock Entry":
-			total = get_total(doc.customer, doc.condition)
-			if total < 0.0:
-				frappe.throw(f"Can't Submit History Tiang <b>{doc.condition}</b>, is insufficient <b>{str(total)}</b>")
+		tt_allow_negative = frappe.get_single_value("Tiang Settings", "tt_allow_negative")
+		total = get_total(doc.customer, doc.condition)
+		if tt_allow_negative and doc.condition == "Tukar Tiang" and total < 0.0:
+			return frappe.msgprint(f"History Tiang <b>{doc.condition}</b>, is insufficient <b>{str(total)}</b>")	
+		
+		if total < 0.0:
+			frappe.throw(f"Can't Submit History Tiang <b>{doc.condition}</b>, is insufficient <b>{str(total)}</b>")
 
 def get_total(customer, condition):
 	total_qty = frappe.db.sql(
