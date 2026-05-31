@@ -71,10 +71,9 @@ def get_item_with_tiang(items, only_fg=True):
 
 def make_movement_stock_tiang(doctype, doc):
     is_outgoing = not doc.is_return
-    return_tiang = doc.return_tiang == "Yes"
-    if not return_tiang and not is_outgoing:
+    if not is_outgoing:
         frappe.msgprint("Sales return tidak mengembalikan tiang. <b>Pastikan melakukan pencatatan</b>")
-        return
+        # return
 
     settings = frappe.get_single("Tiang Settings")
     item_tiang = settings.item_tiang
