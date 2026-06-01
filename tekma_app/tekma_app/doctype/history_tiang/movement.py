@@ -71,8 +71,10 @@ def get_item_with_tiang(items, only_fg=True):
 
 def make_movement_stock_tiang(doctype, doc):
     is_outgoing = not doc.is_return
-    if not doc.update_stock:
-        return
+    if doc.doctype == "Sales Invoice":
+        if not doc.update_stock:
+            return
+
     if not is_outgoing:
         frappe.msgprint("Sales return tidak mengembalikan tiang. <b>Pastikan melakukan pencatatan</b>")
         # return
