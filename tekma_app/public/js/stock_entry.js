@@ -29,8 +29,8 @@ frappe.ui.form.on("Stock Entry", {
 
     frm.fields_dict.bom_no.get_query = function () {
       let filters = {
-        stock_entry_type: frm.doc.stock_entry_type,
-        is_open: 1,
+        production_type: frm.doc.stock_entry_type,
+        is_can_use: 1,
         docstatus: 1,
       };
 
