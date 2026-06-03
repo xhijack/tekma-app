@@ -16,7 +16,6 @@ def execute(filters=None):
         {"label": "Bank", "fieldname": "bank", "fieldtype": "Currency", "width": 150},
         {"label": "Piutang", "fieldname": "piutang", "fieldtype": "Currency", "width": 150},
         {"label": "Jumlah", "fieldname": "jumlah", "fieldtype": "Currency", "width": 150},
-        {"label": "Kasir", "fieldname": "cashier", "fieldtype": "Data", "width": 150}
     ]
 
     values = {}
@@ -55,17 +54,13 @@ def execute(filters=None):
                     AND pe.mode_of_payment = 'Cash'
                     AND TIME(pe.creation) <= '17:00:00'
                 THEN per.allocated_amount ELSE 0 END
-            ) AS tunai,
-
-            u.full_name AS cashier
+            ) AS tunai
         FROM
             `tabSales Invoice` si
         LEFT JOIN
             `tabPayment Entry Reference` per ON per.reference_name = si.name
         LEFT JOIN
             `tabPayment Entry` pe ON per.parent = pe.name AND pe.docstatus = 1
-        LEFT JOIN
-            `tabUser` u ON u.name = si.owner
         WHERE {conditions}
         GROUP BY si.posting_date, si.name, si.customer, si.remarks
         ORDER BY si.posting_date DESC

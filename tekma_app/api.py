@@ -706,7 +706,7 @@ def get_prod_reference(doctype, txt, searchfield, start, page_len, filters):
             ) AS description
         FROM `tabStock Entry`
         WHERE
-            docstatus = 1
+            docstatus != 2
             AND is_open = 1
             AND stock_entry_type = %(stock_entry_type)s
             AND name LIKE %(txt)s

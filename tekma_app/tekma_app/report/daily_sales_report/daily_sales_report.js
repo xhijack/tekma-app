@@ -94,12 +94,12 @@ frappe.query_reports["Daily Sales Report"] = {
                         </style>
 
                         <h1>Pemasukkan Harian</h1>
-                        <h2>${formatDate(filters.date)} ~ ${formatDate(filters.date)}</h2>
+                        <h3>${formatDate(filters.date)} ~ ${formatDate(filters.date)}</h3>
                         <table>
                             <thead>
                                 <tr>
                                     <th style="background-color: #f0f0f0;">No</th>
-                                    ${columns.map(c => `<th style="background-color: #f0f0f0;">${c.label}</th>`).join('')}
+                                    ${columns.map(c => `<th style="background-color: #f0f0f0; ${["Tunai", "Bank"].includes(c.label)? "width: 11%;": c.label =="Jumlah"?"width: 13%;": ""}">${c.label}</th>`).join('')}
                                 </tr>
                             </thead>
                             <tbody>
@@ -126,7 +126,6 @@ frappe.query_reports["Daily Sales Report"] = {
                                     <td style="font-size:12px; background-color: #f0f0f0;" class="currency"><b>${formatCurrency(totalBank)}</b></td>
                                     <td style="font-size:12px; background-color: #f0f0f0;" class="currency"><b>${formatCurrency(totalPiutang)}</b></td>
                                     <td style="font-size:12px; background-color: #f0f0f0;" class="currency"><b>${formatCurrency(totalJumlah)}</b></td>
-                                    <td></td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -199,6 +198,6 @@ function formatDate(dateStr) {
 }
 
 function formatCurrency(amount) {
-    if (!amount) return "0";
+    if (!amount) return "";
     return Number(amount). toLocaleString("id-ID", {minimumFractionDigits: 0})
 }
