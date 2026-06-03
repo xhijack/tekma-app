@@ -698,7 +698,7 @@ def get_prod_reference(doctype, txt, searchfield, start, page_len, filters):
             CONCAT(
                 DATE_FORMAT(posting_date, '%%Y-%%m-%%d'),
                 ', ',
-                IFNULL(jenis_paket, '-'),
+                IFNULL(jenis_batch, '-'),
                 ', ',
                 IFNULL(kode_bak, '-'),
                 ', ',

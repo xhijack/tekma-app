@@ -156,6 +156,7 @@ doc_events = {
 	},
     "Stock Entry": {
         "validate": ["tekma_app.tekma_app.doctype.history_tiang.movement.validating_warehouse", "tekma_app.events.stock_entry_production.stock_entry_on_validate"],
+        "before_save": ["tekma_app.events.stock_entry_production.open_on_amended"],
         "on_submit": ["tekma_app.tekma_app.doctype.history_tiang.movement.stock_entry_on_submit", "tekma_app.events.stock_entry_production.on_submit_stock_entry_production"],
         "on_cancel": ["tekma_app.events.stock_entry_production.on_cancel_stock_entry_production"],
 	},

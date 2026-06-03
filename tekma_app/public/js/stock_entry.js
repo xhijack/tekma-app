@@ -29,8 +29,8 @@ frappe.ui.form.on("Stock Entry", {
 
     frm.fields_dict.bom_no.get_query = function () {
       let filters = {
-        production_type: frm.doc.stock_entry_type,
-        is_can_use: 1,
+        stock_entry_type: frm.doc.stock_entry_type,
+        is_open: 1,
         docstatus: 1,
       };
 
@@ -124,6 +124,8 @@ function apply_prod_reference_query(frm) {
     ref_type = "Mincer";
   } else if (frm.doc.stock_entry_type === "Wrap") {
     ref_type = "Mixer";
+  } else if (frm.doc.stock_entry_type === "FG Transfer") {
+    ref_type = "Wrap";
   }
 
   if (!ref_type) {

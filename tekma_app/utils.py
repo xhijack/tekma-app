@@ -40,9 +40,9 @@ def _compute_core(finished_items, total_rm_cost, rounding=0):
             "valuation_rate": float(per_unit),
             "total_cost": float(total),
         }
-    print(total_rm_cost)
+
     sum_alloc = sum(v["total_cost"] for v in res.values())
-    print(sum_alloc)
+    
     res["_meta"] = {
         "total_rm_cost": float(total_rm_cost),
         "sum_allocated": float(sum_alloc),

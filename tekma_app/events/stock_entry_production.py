@@ -1,16 +1,26 @@
 import frappe
 from frappe.utils import flt
 # Handle stock entry prduksi untuk menandai refrensi dokumen sudah digunakan
+def open_on_amended(doc, method):
+    if doc.amended_from:
+        doc.is_open = 1
+        
 def on_submit_stock_entry_production(doc, method):
     _validate_value_balance(doc)
-    update_is_open(doc, 0)
+    if doc.amended_from and not doc.is_open:
+        doc.is_open = 1
+        frappe.db.set_value("Stock Entry", doc.name, "is_open", 1, update_modified=False)
+    update_is_open(doc, 0, True)
 
 def on_cancel_stock_entry_production(doc, method):
     update_is_open(doc, 1)
 
 
-def update_is_open(doc, is_open = 1):
-    if doc.stock_entry_type in ["Mincer", "Mixer", "Wrap"] and doc.prod_reference:
+def update_is_open(doc, is_open = 1, submit=False):
+    if doc.stock_entry_type in ["Mincer", "Mixer", "Wrap", "FG Transfer"] and doc.prod_reference:
+        print(frappe.db.get_value("Stock Entry", doc.prod_reference, "is_open"))
+        if submit and not frappe.db.get_value("Stock Entry", doc.prod_reference, "is_open"):
+            return frappe.throw(f"Prod Reference <b>{doc.prod_reference}</b> has used")
         frappe.db.set_value("Stock Entry", doc.prod_reference, "is_open", is_open, update_modified=False)
 
 

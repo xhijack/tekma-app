@@ -8,3 +8,4 @@
 tekma_app.patches.add_is_open_to_stock_entry
 tekma_app.patches.change_doc_reference_fieldtype_stock_entry
 tekma_app.patches.sales_return_options_tiang
+tekma_app.patches.update_stock_entry_is_open
