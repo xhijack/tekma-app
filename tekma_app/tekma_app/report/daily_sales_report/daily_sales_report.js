@@ -93,8 +93,7 @@ frappe.query_reports["Daily Sales Report"] = {
                             }
                         </style>
 
-                        <h1>Pemasukkan Harian</h1>
-                        <h3>${formatDate(filters.date)} ~ ${formatDate(filters.date)}</h3>
+                        <h3>Pemasukkan Harian ${formatDate(filters.date)}</h3>
                         <table>
                             <thead>
                                 <tr>
@@ -113,6 +112,8 @@ frappe.query_reports["Daily Sales Report"] = {
                                             return `<td>${day}/${month}</td>`;
                                         } else if(c.label.match(/Tunai|Bank|Piutang|Jumlah/)) {
                                             return `<td class="currency">${formatCurrency(row[c.fieldname])}</td>`;
+                                        } else if(c.label == "Instansi"){
+                                            return `<td>${row[c.fieldname]?.substring(0, 15) || ''}</td>`
                                         } else {
                                             return `<td>${row[c.fieldname] || ''}</td>`;
                                         }
@@ -129,34 +130,47 @@ frappe.query_reports["Daily Sales Report"] = {
                                 </tr>
                             </tfoot>
                         </table>
-                        <div style="width:100%; display:flex; justify-content:space-between; font-size:11px; margin-top:4px;">
-                            <div class="page-number"></div>
-                            <div>Cetak: ${printDateTime}</div>
-                        </div>
+
                         <div style="width:100%; display:flex; justify-content:space-between; font-size:11px; margin-top:4px; gap: 100px; margin-top:10px;">
-                            <table>
-                                <thead>
-                                    <th>AR Pelanggan ✍️</th>
-                                    <th style="width:25%;">Rp</th>
-                                    <th>Lapor Finance</th>
-                                </thead>
-                                <tbody>
-                                    <tr><td style="height:15px;"></td><td></td><td></td></tr>
-                                    <tr><td style="height:15px;"></td><td></td><td></td></tr>
-                                    <tr><td style="height:15px;"></td><td></td><td></td></tr>
-                                    <tr><td style="height:15px;"></td><td></td><td></td></tr>
-                                </tbody>
-                            </table>
-                            <table>
-                                <thead>
-                                    <th>Jumlah Setor Tunai :</th>
-                                    <th>Petty Form :</th>
-                                    <th>Daily Cost Form :</th>
-                                </thead>
-                                <tbody>
-                                    <tr><td style="height:30px;"></td><td></td><td></td></tr>
-                                </tbody>
-                            </table>
+                            <div width="50%">
+                                <table width="100%">
+                                    <thead>
+                                        <th width="120px">Pelanggan</th>
+                                        <th width="150px">AR Rp</th>
+                                        <th width="50px">PE ✍️</th>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td style="padding:3px;">&nbsp;</td><td></td><td></td></tr>
+                                        <tr><td style="padding:3px;">&nbsp;</td><td></td><td></td></tr>
+                                        <tr><td style="padding:3px;">&nbsp;</td><td></td><td></td></tr>
+                                        <tr><td style="padding:3px;">&nbsp;</td><td></td><td></td></tr>
+                                        <tr><td style="padding:3px;">&nbsp;</td><td></td><td></td></tr>
+                                        <tr><td style="padding:3px;">&nbsp;</td><td></td><td></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div width="50%">
+                                <div style="float: left;">Cetak: ${printDateTime}</div>
+                                <div style="float: right;" class="page-number"></div>
+                                <table width="100%" style="margin-top: 17px">
+                                    <tbody>
+                                        <tr>
+                                            <td align="center" colspan="2">Setoran Tunai</td>
+                                        </tr>
+                                        <tr>
+                                            <td align="center" colspan="2" style="height: 35px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td align="center">Petty Form</td>
+                                            <td align="center">Daily Cost From</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="height: 40px; width: 50%;"></td>
+                                            <td style="height: 40px; width: 50%;"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                         `;
 

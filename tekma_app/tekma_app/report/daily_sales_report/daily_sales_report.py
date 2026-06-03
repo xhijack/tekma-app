@@ -11,7 +11,7 @@ def execute(filters=None):
         {"label": "Tgl", "fieldname": "tgl", "fieldtype": "Date", "width": 120},
         {"label": "No Faktur", "fieldname": "no_faktur", "fieldtype": "Link", "options": "Sales Invoice", "width": 200},
         {"label": "ID", "fieldname": "id", "fieldtype": "Link", "options": "Customer", "width": 50},
-        {"label": "Keterangan", "fieldname": "keterangan", "fieldtype": "Data", "width": 150},
+        {"label": "Instansi", "fieldname": "instansi", "fieldtype": "Data", "width": 150},
         {"label": "Tunai", "fieldname": "tunai", "fieldtype": "Currency", "width": 150},
         {"label": "Bank", "fieldname": "bank", "fieldtype": "Currency", "width": 150},
         {"label": "Piutang", "fieldname": "piutang", "fieldtype": "Currency", "width": 150},
@@ -34,7 +34,7 @@ def execute(filters=None):
             si.posting_date AS tgl,
             si.name AS no_faktur,
             si.customer AS id,
-            si.customer_name AS keterangan,
+            si.customer_name AS instansi,
             si.grand_total
                 - SUM(
                     CASE WHEN pe.docstatus = 1 
