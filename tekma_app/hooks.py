@@ -182,7 +182,11 @@ doc_events = {
             "tekma_app.overrides.pick_list.set_delivery_date_from_so"
         ],
         "validate": [
-            "tekma_app.overrides.pick_list.set_keterangan"
+            "tekma_app.overrides.pick_list.set_keterangan",
+            "tekma_app.custom.pick_list.validate_sales_order_delivery",
+        ],
+        "before_submit": [
+            "tekma_app.custom.pick_list.validate_stock_soft_reservation"
         ]
     }
 }
