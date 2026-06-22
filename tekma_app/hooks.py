@@ -26,7 +26,7 @@ app_license = "mit"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/tekma_app/css/tekma_app.css"
-# app_include_js = "/assets/tekma_app/js/tekma_app.js"
+app_include_js = "/assets/tekma_app/js/doctype.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/tekma_app/css/tekma_app.css"
@@ -289,4 +289,13 @@ after_migrate = ["tekma_app.install.update_fields"]
 # default_log_clearing_doctypes = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
+
+fixtures=[
+    {
+        "dt": "Custom Field",
+        "filters": [
+            ["dt", "in", ["Sales Order", "Pick List", "Delivery Note", "Sales Invoice"]],
+        ]
+    }
+]
 

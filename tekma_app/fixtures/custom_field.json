@@ -1,0 +1,46 @@
+[
+ {
+  "doctype": "Custom Field",
+  "dt": "Sales Order",
+  "fieldname": "note_internal",
+  "fieldtype": "Small Text",
+  "in_list_view": 1,
+  "in_preview": 1,
+  "insert_after": "keterangan",
+  "label": "Catatan Untuk Internal",
+  "name": "Sales Order-custom_catatan_untuk_internal"
+ },
+  {
+  "doctype": "Custom Field",
+  "dt": "Pick List",
+  "fieldname": "note_internal",
+  "fieldtype": "Small Text",
+  "in_list_view": 1,
+  "in_preview": 1,
+  "insert_after": "catatan_untuk_gudang",
+  "label": "Catatan Untuk Internal",
+  "name": "Pick List-custom_catatan_untuk_internal"
+ },
+  {
+  "doctype": "Custom Field",
+  "dt": "Delivery Note",
+  "fieldname": "note_internal",
+  "fieldtype": "Small Text",
+  "in_list_view": 1,
+  "in_preview": 1,
+  "insert_after": "remarks",
+  "label": "Catatan Untuk Internal",
+  "name": "Delivery Note-custom_catatan_untuk_internal"
+ },
+  {
+  "doctype": "Custom Field",
+  "dt": "Sales Invoice",
+  "fieldname": "note_internal",
+  "fieldtype": "Small Text",
+  "in_list_view": 1,
+  "in_preview": 1,
+  "insert_after": "posting_time",
+  "label": "Catatan Untuk Internal",
+  "name": "Sales Invoice-custom_catatan_untuk_internal"
+ }
+]
