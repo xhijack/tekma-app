@@ -209,6 +209,7 @@ def get_item_price_history(company, item_code, customer=None, limit=100):
         SELECT
             si.name            AS invoice,
             si.posting_date    AS posting_date,
+            si.remarks         AS remarks,
             sii.item_code      AS item_code,
             sii.item_name      AS item_name,
             sii.qty            AS qty,
@@ -435,6 +436,7 @@ def get_item_cost_history(company, item_code, supplier=None, limit=100):
         """
         SELECT
             pi.name         AS invoice,
+            pi.catatan      AS catatan,
             pi.posting_date AS posting_date,
             pii.item_code   AS item_code,
             pii.item_name   AS item_name,

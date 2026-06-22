@@ -308,6 +308,7 @@ function open_item_cost_dialog(frm, row) {
             <th style="text-align:center;width:50px">No</th>
             <th style="text-align:left;width:120px">${__('Tanggal Invoice')}</th>
             <th style="text-align:left">${__('Nomor Invoice')}</th>
+            <th style="text-align:left">${__('Catatan')}</th>
             <th style="text-align:right;width:90px">${__('Qty')}</th>
             <th style="text-align:left;width:80px">${__('UOM')}</th>
             <th style="text-align:right;width:120px">${__('Rate')}</th>
@@ -327,6 +328,7 @@ function open_item_cost_dialog(frm, row) {
                 ${frappe.utils.escape_html(it.invoice)}
               </a>
             </td>
+            <td> ${frappe.utils.escape_html(it.catatan)}</td>
             <td style="text-align:right">${frappe.format(it.qty, {fieldtype: 'Float'})}</td>
             <td>${frappe.utils.escape_html(it.uom || '')}</td>
             <td style="text-align:right">${fmt(it.rate)}</td>
