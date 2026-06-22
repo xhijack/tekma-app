@@ -396,7 +396,7 @@ function open_item_price_dialog(frm, row) {
               <th style="text-align:center;width:50px">No</th>
               <th style="text-align:left;width:120px">${__('Tanggal Invoice')}</th>
               <th style="text-align:left">${__('Nomor Invoice')}</th>
-              <th style="text-align:left">${__('Remarks')}</th>
+              <th style="text-align:left">${__('Catatan')}</th>
               <th style="text-align:right;width:90px">${__('Qty')}</th>
               <th style="text-align:left;width:80px">${__('UOM')}</th>
               <th style="text-align:right;width:100px">${__('% Disc')}</th>
