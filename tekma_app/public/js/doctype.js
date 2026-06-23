@@ -1,11 +1,14 @@
 const doctypes = [
     {
-        dt: "Pick List", items_key: "locations", prev: "Sales Order", key: "sales_order"
-    }, {
-        dt: "Delivery Note", items_key: "items", prev: "Pick List", key: "against_pick_list"
-    }, {
-        dt: "Sales Invoice", items_key: "items", prev: "Delivery Note", key: "delivery_note"
-    }]
+        dt: "Pick List", items_key: "locations", prev: "Sales Order", key: "sales_order", field: "pl_note_internal", p_field: "note_internal"
+    },
+    {
+        dt: "Delivery Note", items_key: "items", prev: "Pick List", key: "against_pick_list", field: "dn_note_internal", p_field: "pl_note_internal"
+    },
+    {
+        dt: "Sales Invoice", items_key: "items", prev: "Delivery Note", key: "delivery_note", field: "si_note_internal", p_field: "dn_note_internal"
+    }
+]
 doctypes.forEach(dt => {
     frappe.ui.form.on(dt.dt, {
         after_load(frm) {
@@ -18,38 +21,25 @@ doctypes.forEach(dt => {
 })
 function load_note_internal(frm, dt) {
     let orders = get_ref_doctype(frm.doc, dt.items_key, dt.key)
-    if (orders.length) {
-        frappe.db.get_list(dt.prev, { fields: ["name", "note_internal"], filters: [["name", "in", [...new Set(orders)].sort()]] }, "note_internal")
+    let old_val = frm.doc[dt.field]
+    if (orders.length && frm.doc?.docstatus == 0) {
+        if(old_val?.length > 0) return 
+        console.log(orders, old_val, frm.doc, "hello")
+        frappe.db.get_list(dt.prev, { fields: ["name", dt.p_field], filters: [["name", "in", [...new Set(orders)].sort()]] }, "note_internal")
             .then(list => {
                 let note_internal = [];
 
                 for (const el of list) {
-                    if (el.note_internal) {
+                    let note = el[dt.p_field]
+                    if (note) {
                         if (list.length === 1) {
-                            note_internal.push(...el.note_internal.split("\n").filter(Boolean));
+                            note_internal.push(...note.split("\n").filter(Boolean));
                         } else {
-                            note_internal.push(`${el.name}: ${el.note_internal}`);
+                            note_internal.push(`${el.name}: ${note}`);
                         }
                     }
                 }
-
-                // Note yang sudah ada
-                let old_note = (frm.doc.note_internal || "")
-                    .split("\n")
-                    .filter(Boolean);
-                console.log("old note", old_note)
-                console.log(note_internal)
-                // Tambahkan hanya yang belum ada
-                let new_note = note_internal.filter(
-                    note => !old_note.includes(note)
-                );
-
-                if (new_note.length) {
-                    frm.set_value(
-                        "note_internal",
-                        [...new_note, ...old_note].join("\n\n")
-                    );
-                }
+                frm.set_value(dt.field, note_internal.join("\n"))
             })
     }
 }
