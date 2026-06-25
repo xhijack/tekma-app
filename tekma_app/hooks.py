@@ -26,7 +26,7 @@ app_license = "mit"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/tekma_app/css/tekma_app.css"
-app_include_js = "/assets/tekma_app/js/doctype.js"
+app_include_js = ["doctype.bundle.js"]
 
 # include js, css files in header of web template
 # web_include_css = "/assets/tekma_app/css/tekma_app.css"
