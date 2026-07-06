@@ -109,5 +109,5 @@ def get_columns():
             "fieldname": "qty",
             "fieldtype": "Float",
             "width": 100,
-        },
+        }
     ]
