@@ -28,6 +28,11 @@ frappe.query_reports["Realtime Stock"] = {
 			get_data: (q) => frappe.db.get_link_options("Warehouse", q)
 		},
 		{
+			fieldname: "picked_stock",
+			label: __("Show Reserved Stock"),
+			fieldtype: "Check"
+		},
+		{
 			fieldname: "disabled_batch",
 			label: __("Include Disabled Batch"),
 			fieldtype: "Check"
@@ -104,6 +109,7 @@ frappe.query_reports["Realtime Stock"] = {
 		}
 
 		this.auto_refresh_interval = setInterval(() => {
+			if(frappe.get_route(1) != "Realtime Stock")
 			if (!this.report) return;
 
 			// pause jika tab tidak aktif

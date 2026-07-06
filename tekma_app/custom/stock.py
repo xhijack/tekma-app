@@ -1,7 +1,52 @@
+from collections import defaultdict
+
 from tekma_app.custom.condition_builder import ConditionBuilder
+
+def get_relatime_and_picked_stock(filters):
+    stock = get_realtime_stock(filters)
+    picked = get_picked_stock(filters)
+    
+    return merge_stock_and_picked(stock, picked)
+
+def get_picked_stock(filters):
+    return PickedStock(filters).get_data()
+
 
 def get_realtime_stock(filters):
     return RealtimeStock(filters).get_data()
+
+def merge_stock_and_picked(stock, pick_items):
+
+    picked_map = defaultdict(float)
+
+    for row in pick_items:
+        key = (
+            row["item_code"],
+            row["warehouse"],
+            row["batch_no"],
+        )
+        picked_map[key] += float(row.get("picked_qty") or 0)
+
+    result = []
+
+    for row in stock:
+        data = row.copy()
+
+        key = (
+            data["item_code"],
+            data["warehouse"],
+            data["batch_no"],
+        )
+
+        picked_qty = picked_map.get(key, 0)
+
+        data["picked_qty"] = picked_qty
+        data["actual_qty"] = (data.get("qty") or 0) - picked_qty
+
+        result.append(data)
+    return result
+
+
 
 class RealtimeStock:
 
@@ -50,8 +95,7 @@ class RealtimeStock:
 
 
         return builder.build()
-    
-    def get_data(self):
+    def get_query_and_params(self):
         query_batch, batch_params = self.query_batch()
         query_non_batch, non_batch_params = self.query_non_batch()
 
@@ -83,13 +127,20 @@ class RealtimeStock:
                 t.manufacturing_date ASC
         """
 
+        return query, params
+    
+    def get_data(self):
+        query, params = self.get_query_and_params()    
+
         import frappe
 
-        return frappe.db.sql(
+        data = frappe.db.sql(
             query,
             params,
             as_dict=True,
         )
+        print(data)
+        return data
     
     def query_non_batch(self):
 
@@ -175,3 +226,61 @@ class RealtimeStock:
     def get_filters(self, filter):
         return self.filters.get(filter)
     
+
+
+class PickedStock(RealtimeStock):
+    def __init__(self, filters=None):
+        filters = {
+            "warehouse": filters.get("warehouse"),
+            "item_code": filters.get("item_code"),
+            "summary": filters.get("summary")
+        }
+        super().__init__(filters)
+
+    def get_query_and_params(self):
+        conditions, params = self.build_conditions()
+        conditions.append("pl.docstatus = 1")
+        conditions.append("pl.status = 'Open'")
+        
+        select = """
+                pli.batch_no AS batch_no,
+                pli.picked_qty
+        """
+
+        # validate summary
+        if self.get_filters("summary"):
+            select = """
+                NULL AS batch_no,
+                SUM(pli.picked_qty) AS picked_qty
+            """
+        query = f"""
+            SELECT
+                pl.name AS pick_list,
+                pl.status,
+                pl.docstatus,
+                pli.item_code,
+                i.item_name,
+                pli.warehouse,
+                {select}
+
+            FROM `tabPick List Item` pli
+
+            INNER JOIN `tabPick List` pl
+                ON pl.name = pli.parent
+
+            INNER JOIN `tabItem` i
+                ON i.name = pli.item_code
+
+            WHERE
+                {" AND ".join(conditions)}
+
+            GROUP BY
+                item_code, warehouse, batch_no
+        """
+        print(query)
+        return query, params
+    
+    def build_conditions(self):
+        builder = ConditionBuilder()
+
+        return builder.tree("Warehouse", "pli.warehouse", self.get_filters("warehouse")).in_("i.item_code", self.get_filters("item_code")).build()
