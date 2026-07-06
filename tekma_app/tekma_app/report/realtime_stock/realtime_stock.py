@@ -57,6 +57,14 @@ def execute(filters=None):
     else:
         data = get_realtime_stock(filters)
 
+    columns.append(
+        {
+            "label": "UoM",
+            "fieldname": "stock_uom",
+            "fieldtype": "Data",
+            "width": 80,
+        }
+    )
 
     return columns, data
 
@@ -101,11 +109,5 @@ def get_columns():
             "fieldname": "qty",
             "fieldtype": "Float",
             "width": 100,
-        },
-        {
-            "label": "UoM",
-            "fieldname": "stock_uom",
-            "fieldtype": "Data",
-            "width": 80,
         },
     ]
