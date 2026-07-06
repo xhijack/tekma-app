@@ -131,7 +131,7 @@ class RealtimeStock:
     
     def get_data(self):
         query, params = self.get_query_and_params()    
-        print(query, params)
+        
         import frappe
 
         data = frappe.db.sql(

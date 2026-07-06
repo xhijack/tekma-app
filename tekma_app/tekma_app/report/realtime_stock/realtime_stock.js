@@ -255,7 +255,7 @@ frappe.query_reports["Realtime Stock"] = {
 		const filters = this.report?.get_values() || {};
 		const date = new Date();
 
-		let title = `Opname ${filters.item_group || ""} ${date.toLocaleString('id-ID', { month: 'long' })} ${date.getFullYear()}`;
+		let title = `Opname ${filters.item_group?.join?.(", ") || ""} ${date.toLocaleString('id-ID', { month: 'long' })} ${date.getFullYear()}`;
 		title = (summarize ? "(Summary) " : "(Batch) ") + title;
 
 		if (filters.warehouse != undefined && filters.warehouse?.length > 0) title += ` - ${filters.warehouse[0]}`;
