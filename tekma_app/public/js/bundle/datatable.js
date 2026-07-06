@@ -165,13 +165,26 @@ const datatable_state = {
     }
 };
 
-frappe.views.QueryReport.prototype.render_datatable = function() {
-    console.log("called")
+frappe.views.QueryReport.prototype.render_datatable = function () {
     let data = this.data;
     let columns = this.columns.filter((col) => !col.hidden);
 
-    this.$report.show();
+    if (data.length > (cint(frappe.boot.sysdefaults.max_report_rows) || 100000)) {
+        let msg = __(
+            "This report contains {0} rows and is too big to display in browser, you can {1} this report instead.",
+            [cstr(format_number(data.length, null, 0)).bold(), __("export").bold()]
+        );
 
+        this.toggle_message(true, `${frappe.utils.icon("solid-warning")} ${msg}`);
+        return;
+    }
+
+    if (this.raw_data.add_total_row && !this.report_settings.tree) {
+        data = data.slice();
+        data.splice(-1, 1);
+    }
+
+    this.$report.show();
     if (
         this.datatable &&
         this.datatable.options &&
@@ -199,18 +212,14 @@ frappe.views.QueryReport.prototype.render_datatable = function() {
         if (this.report_settings.get_datatable_options) {
             datatable_options = this.report_settings.get_datatable_options(datatable_options);
         }
-
         this.datatable = new window.DataTable(this.$report[0], datatable_options);
     }
 
     if (typeof this.report_settings.initial_depth == "number") {
         this.datatable.rowmanager.setTreeDepth(this.report_settings.initial_depth);
     }
-
     if (this.report_settings.after_datatable_render) {
         this.report_settings.after_datatable_render(this.datatable);
     }
-
     this.datatable_state = datatable_state.init(this.datatable, this.report_name);
-
-};
+}
