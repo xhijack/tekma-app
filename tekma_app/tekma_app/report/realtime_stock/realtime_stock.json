@@ -10,7 +10,7 @@
  "idx": 0,
  "is_standard": "Yes",
  "letter_head": null,
- "modified": "2026-06-30 07:33:20.064085",
+ "modified": "2026-07-06 09:37:57.292557",
  "modified_by": "Administrator",
  "module": "Tekma App",
  "name": "Realtime Stock",
@@ -39,6 +39,12 @@
   },
   {
    "role": "Spv. Produksi"
+  },
+  {
+   "role": "Customer Support"
+  },
+  {
+   "role": "Sales Executive"
   }
  ],
  "timeout": 15
