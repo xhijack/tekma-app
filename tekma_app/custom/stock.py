@@ -115,23 +115,23 @@ class RealtimeStock:
             SELECT * FROM (
                 {query_non_batch}
                 {union_query}
-            ) t
+            ) lv
         """
         if self.get_filters("ignore_empty_stock"):
             query += " HAVING qty <> 0 "
         query += """
             ORDER BY
-                t.opname_sort ASC,
-                t.item_name ASC,
-                t.warehouse ASC,
-                t.manufacturing_date ASC
+                lv.opname_sort ASC,
+                lv.item_name ASC,
+                lv.warehouse ASC,
+                lv.manufacturing_date ASC
         """
 
         return query, params
     
     def get_data(self):
         query, params = self.get_query_and_params()    
-
+        print(query, params)
         import frappe
 
         data = frappe.db.sql(
@@ -139,7 +139,6 @@ class RealtimeStock:
             params,
             as_dict=True,
         )
-        print(data)
         return data
     
     def query_non_batch(self):
@@ -165,7 +164,8 @@ class RealtimeStock:
                 i.stock_uom,
                 i.opname_sort,
                 i.disabled AS disabled_item,
-                NULL AS disabled_batch
+                NULL AS disabled_batch,
+                i.item_group
 
             FROM `tabBin` bin
 
@@ -197,7 +197,8 @@ class RealtimeStock:
                 i.stock_uom,
                 i.opname_sort,
                 i.disabled AS disabled_item,
-                b.disabled AS disabled_batch
+                b.disabled AS disabled_batch,
+                i.item_group
 
             FROM `tabStock Ledger Entry` sle
 
@@ -277,7 +278,7 @@ class PickedStock(RealtimeStock):
             GROUP BY
                 item_code, warehouse, batch_no
         """
-        print(query)
+
         return query, params
     
     def build_conditions(self):

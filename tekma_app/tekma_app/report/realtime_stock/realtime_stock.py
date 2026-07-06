@@ -79,6 +79,13 @@ def get_columns():
             "width": 140,
         },
         {
+            "label": "Item Group",
+            "fieldname": "item_group",
+            "fieldtype": "Data",
+            # "options": "Item",
+            "width": 100,
+        },
+        {
             "label": "Item Name",
             "fieldname": "item_name",
             "fieldtype": "Data",

@@ -208,32 +208,32 @@ class ConditionBuilder:
         if not value:
             return self
 
-        node = frappe.db.get_value(
+        nodes = frappe.db.get_values(
             doctype,
             value,
             ["lft", "rgt"],
             as_dict=True,
         )
-
-        if not node:
+        print(nodes, value)
+        if not nodes:
             return self
 
+        clauses = []
+        
         alias = alias or self._normalize_key(doctype)
+        for node in nodes:
+            clauses.append(f"(t.lft >= {node.lft} AND t.rgt <= {node.rgt})")
 
         return self._add(
             f"""
             EXISTS (
                 SELECT 1
                 FROM `tab{doctype}` t
-                WHERE t.name = {field}
-                  AND t.lft >= %({alias}_lft)s
-                  AND t.rgt <= %({alias}_rgt)s
+                WHERE (t.name = {field}
+                  AND ({" OR ".join(clauses)}))
             )
             """,
-            {
-                f"{alias}_lft": node.lft,
-                f"{alias}_rgt": node.rgt,
-            },
+            {}
         )
 
     # ------------------------------------------------------------------
