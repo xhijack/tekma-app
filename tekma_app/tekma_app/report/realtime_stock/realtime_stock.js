@@ -50,7 +50,7 @@ frappe.query_reports["Realtime Stock"] = {
 		},
 		{
 			fieldname: "summary",
-			label: __("Summary"),
+			label: __("Without Batch"),
 			fieldtype: "Check"
 		},
 	],
@@ -185,6 +185,7 @@ frappe.query_reports["Realtime Stock"] = {
 				acc[key] = {
 					item_code: row.item_code,
 					item_name: row.item_name || "",
+					opname_sort: row.opname_sort,
 					parent_warehouse: row.parent_warehouse,
 					total_qty: 0,
 					stock_uom: row.stock_uom,
@@ -201,7 +202,8 @@ frappe.query_reports["Realtime Stock"] = {
 				batch_no: row.batch_no,
 				manufacturing_date: row.manufacturing_date,
 				qty: Number(row.qty || 0),
-				stock_uom: row.stock_uom
+				stock_uom: row.stock_uom,
+				opname_sort: row.opname_sort,
 			});
 
 			return acc;
@@ -209,31 +211,36 @@ frappe.query_reports["Realtime Stock"] = {
 
 		return Object.values(groupedMap);
 	},
-
+	getAlphabet(index) {
+		return String.fromCharCode(65 + index); // 0 = A
+	},
 	// HTML PRINT
 	make_html(stocks, summarize) {
-		const rows = stocks.map(group => {
-
+		let number = 0;
+		let summarizeNumber = 0;
+		const rows = stocks.map((group, i) => {
 			const parent_row = `
 				<tr class="bold">
+					<td style="text-align: right;">${group.opname_sort || "0"}</td>
 					<td>${group.item_name}</td>
 					<td>${this.short_wh(group.parent_warehouse)}</td>
 					<td>-</td>
-					<td>${formatNumber(group.total_qty)}</td>
-					<td>${group.stock_uom}</td>
 					<td></td>
+					<td style="text-align: right;">${formatNumber(group.total_qty)}</td>
+					<td>${group.stock_uom}</td>
 					<td></td>
 				</tr>
 			`;
 
-			const child_rows = group.children.map(child => `
+			const child_rows = group.children.map((child, i) => `
 				<tr class="${group.children.length == 1 ? 'bold' : ''}">
+					<td style="text-align: right;">${child.opname_sort || "0"}</td>
 					<td>${group.children.length == 1 ? group.item_name : ""}</td>
 					<td>${this.short_wh(child.warehouse)}</td>
 					<td>${summarize ? "-" : (child.batch_no || "-")}</td>
-					<td>${formatNumber(child.qty)}</td>
-					<td>${child.stock_uom}</td>
 					<td></td>
+					<td style="text-align: right;">${formatNumber(child.qty)}</td>
+					<td>${child.stock_uom}</td>
 					<td></td>
 				</tr>
 			`).join("");
@@ -251,37 +258,138 @@ frappe.query_reports["Realtime Stock"] = {
 		let title = `Opname ${filters.item_group || ""} ${date.toLocaleString('id-ID', { month: 'long' })} ${date.getFullYear()}`;
 		title = (summarize ? "(Summary) " : "(Batch) ") + title;
 
-		if (filters.warehouse) title += ` - ${filters.warehouse}`;
+		if (filters.warehouse != undefined && filters.warehouse?.length > 0) title += ` - ${filters.warehouse[0]}`;
+		const style = `
+			<style>
+				@page {
+					size: A4 portrait;
+					margin: 10mm;
+					margin-top: 15mm;
+					@top-right {
+						content: "${(new Date()).toLocaleString("id-ID").replaceAll(".",":")} " counter(page) "/" counter(pages);
+						font-size: 11px;
+						font-weight: bold;
+						margin-top: 8mm;
+					}
+				}
+				@page:first{
+					margin-top: 5mm;
+				}
+				@media print {
+					td, th {
+						-webkit-print-color-adjust: exact;
+						print-color-adjust: exact;
+					}
 
+					body {
+						counter-reset: page; 
+					}
+					
+					.page-number:after {
+						counter-increment: page;
+						content: "[P." counter(page) "]";
+					}
+
+				}
+				*{
+					font-size: 12px;
+				}
+				body {
+					font-family: Arial, sans-serif;
+					text-align: center;
+				}
+				h3 {
+					margin-bottom: 10px;
+					font-size: 22px !important;
+				}
+				table {
+					border-collapse: collapse;
+					width: 100%;
+					margin: 0 auto;
+					text-align: left;
+				}
+				th, td {
+					border: 1px solid #000;
+					padding: 4px;
+					font-size: 11px;
+				}
+				th {
+					text-align:center;
+				}
+				tr.bold td{
+					font-weight: bold;
+				}
+			</style>
+		`
+		const signature =`
+			<div style="margin-top: 10px; display: flex; flex-direction: column; align-items: flex-start;">
+				<p style="margin: 0;">Catatan:</p>
+				<p style="width: 100%; border-bottom: 1px solid black; margin: 0;">&nbsp;</p>
+				<p style="width: 100%; border-bottom: 1px solid black; margin: 0; margin-top: 10px;">&nbsp;</p>
+				<p style="width: 100%; border-bottom: 1px solid black; margin: 0; margin-top: 10px;">&nbsp;</p>
+			</div>
+			<div>
+			</div>
+			<table style="margin-top: 5mm; width: 70%;">
+				<tr>
+					<td style="text-align:center; width: 25%;">Waktu mulai</td>
+					<td style="text-align:center; width: 25%;">Waktu selesai</td>
+					<td style="text-align:center; width: 25%;">Waktu check</td>
+					<td style="text-align:center; width: 25%;">Waktu input</td>
+				</tr>
+				<tr>
+					<td style="height: 30px;"></td>
+					<td style="height: 30px;"></td>
+					<td style="height: 30px;"></td>
+					<td style="height: 30px;"></td>
+				</tr>
+			</table>
+			<table style="margin-top: 5mm; width: 70%;">
+				<tr>
+					<td style="text-align:center; width: 25%;">Operator Hitung</td>
+					<td style="text-align:center; width: 25%;">Operator Catat</td>
+					<td style="text-align:center; width: 25%;">Spv. Checker</td>
+					<td style="text-align:center; width: 25%;">Mngr. Approval</td>
+				</tr>
+				<tr>
+					<td style="height: 50px;"></td>
+					<td style="height: 50px;"></td>
+					<td style="height: 50px;"></td>
+					<td style="height: 50px;"></td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+				</tr>
+			</table>
+		`
 		const html = `
 		<html>
 		<head>
-			<style>
-				@page { size: A4 portrait; margin: 10mm; }
-				* { font-size: 12px; }
-				body { font-family: Arial; text-align: center; }
-				table { border-collapse: collapse; width: 100%; }
-				th, td { border: 1px solid #000; padding: 4px; font-size: 11px; }
-				tr.bold td { font-weight: bold; }
-			</style>
+			${style}
+			<title>${title}</title>
 		</head>
 		<body>
-			<h2>${title}</h2>
+			<h3>${title}</h3>
 
 			<table>
 				<thead>
 					<tr>
-						<th>Item</th>
-						<th>Warehouse</th>
-						<th>Batch</th>
-						<th>Qty</th>
-						<th>UoM</th>
-						<th>Qty Real</th>
-						<th>Selisih</th>
+						<th style="width: 1%; text-align: right;">No.</th>
+						<th style="width: 20%;">Item</th>
+						<th style="width: 10%;">WH</th>
+						<th style="width: 15%;">Batch</th>
+						<th style="width: 20%;">Qty Real</th>
+						<th style="width: 5%;">Qty</th>
+						<th style="width: 5%;">UoM</th>
+						<th style="width: 10%;">Selisih</th>
 					</tr>
 				</thead>
 				<tbody>${rows}</tbody>
 			</table>
+			${signature}
 		</body>
 		</html>`;
 
