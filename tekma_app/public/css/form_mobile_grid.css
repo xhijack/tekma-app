@@ -1,0 +1,237 @@
+body.mobile-device .mobile-card-grid {
+	position: static !important;
+	left: auto !important;
+	width: 100% !important;
+	min-width: 0 !important;
+	border: 0 !important;
+	background: transparent !important;
+}
+
+body.mobile-device .mobile-grid-heading-hidden {
+	display: none !important;
+}
+
+body.mobile-device .mobile-grid-field .grid-body {
+	width: 100%;
+	overflow: visible;
+	border: 0;
+	background: transparent;
+}
+
+body.mobile-device .mobile-grid-field .rows {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	gap: 12px;
+}
+
+body.mobile-device .mobile-grid-row {
+	display: block;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+body.mobile-device .mobile-grid-card {
+	display: block;
+	width: 100%;
+	overflow: hidden;
+	border: 1px solid var(--border-color);
+	border-radius: 8px;
+	background: var(--card-bg, var(--bg-color));
+	box-shadow: var(--shadow-xs);
+}
+
+body.mobile-device .mobile-grid-card-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	min-height: 48px;
+	padding: 8px 10px;
+	border-bottom: 1px solid var(--border-color);
+	background: var(--subtle-fg);
+}
+
+body.mobile-device .mobile-grid-card-index {
+	display: flex;
+	align-items: center;
+	min-width: 0;
+	gap: 8px;
+}
+
+body.mobile-device .mobile-grid-check-wrapper {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	margin: 0;
+}
+
+body.mobile-device .mobile-grid-row-title {
+	font-size: 14px;
+	font-weight: 600;
+}
+
+body.mobile-device .mobile-grid-card-actions {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+}
+
+body.mobile-device .mobile-grid-card-actions .btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 34px;
+	gap: 5px;
+	margin: 0;
+}
+
+body.mobile-device .mobile-grid-card-body {
+	display: grid;
+	grid-template-columns: 1fr;
+	width: 100%;
+	gap: 0;
+	padding: 0;
+}
+
+body.mobile-device .mobile-grid-card-field {
+	min-width: 0;
+}
+
+body.mobile-device .mobile-grid-card-field-full {
+	grid-column: 1 / -1;
+}
+
+body.mobile-device .mobile-grid-card-field-label {
+	margin-bottom: 4px;
+	overflow: hidden;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1.3;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--text-muted);
+}
+
+body.mobile-device .mobile-grid-card-field-value {
+	min-height: 21px;
+	font-size: 14px;
+	line-height: 1.45;
+	overflow-wrap: anywhere;
+	color: var(--text-color);
+}
+
+body.mobile-device .mobile-grid-card-field-required {
+	padding-left: 8px;
+	border-left: 3px solid var(--red-500);
+}
+
+body.mobile-device .mobile-grid-card-selected {
+	border-color: var(--primary);
+	box-shadow: 0 0 0 1px var(--primary);
+}
+
+body.mobile-device .mobile-grid-default-empty-hidden {
+	display: none !important;
+}
+
+body.mobile-device .mobile-grid-empty-card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	min-height: 180px;
+	gap: 8px;
+	padding: 24px 16px;
+	border: 1px dashed var(--border-color);
+	border-radius: 8px;
+	text-align: center;
+	background: var(--card-bg, var(--bg-color));
+}
+
+body.mobile-device .mobile-grid-empty-card.hidden {
+	display: none !important;
+}
+
+body.mobile-device .mobile-grid-empty-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	background: var(--subtle-fg);
+	color: var(--text-muted);
+}
+
+body.mobile-device .mobile-grid-empty-title {
+	font-size: 14px;
+	font-weight: 600;
+}
+
+body.mobile-device .mobile-grid-empty-description {
+	font-size: 12px;
+	color: var(--text-muted);
+}
+
+body.mobile-device .mobile-grid-empty-add {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 38px;
+	gap: 6px;
+	margin-top: 4px;
+}
+
+body.mobile-device .mobile-grid-card-field {
+	display: grid;
+	grid-template-columns: minmax(110px, 38%) minmax(0, 1fr);
+	align-items: start;
+	width: 100%;
+	min-width: 0;
+	gap: 12px;
+	padding: 10px 12px;
+	border-bottom: 1px solid var(--border-color);
+}
+
+body.mobile-device .mobile-grid-card-field:last-child {
+	border-bottom: 0;
+}
+
+body.mobile-device .mobile-grid-card-field-full {
+	grid-column: auto;
+}
+
+body.mobile-device .mobile-grid-card-field-label {
+	margin: 0;
+	overflow: visible;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.45;
+	text-overflow: unset;
+	white-space: normal;
+	color: var(--text-muted);
+}
+
+body.mobile-device .mobile-grid-card-field-value {
+	min-width: 0;
+	min-height: 20px;
+	font-size: 14px;
+	line-height: 1.45;
+	overflow-wrap: anywhere;
+	color: var(--text-color);
+}
+
+body.mobile-device .mobile-grid-card-field-required {
+	padding-left: 12px;
+	border-left: 3px solid var(--red-500);
+}
+
+body.mobile-device .mobile-grid-card-field-bold .mobile-grid-card-field-value {
+	font-weight: 600;
+}
