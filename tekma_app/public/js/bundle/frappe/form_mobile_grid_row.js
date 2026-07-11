@@ -91,7 +91,6 @@ const HIDDEN_FIELD_TYPES = new Set([
 	"Heading",
 	"HTML",
 	"HTML Editor",
-	"Button",
 	"Table",
 	"Table MultiSelect",
 ]);
@@ -343,7 +342,10 @@ export default class MobileGridRow extends GridRow {
 			return false;
 		}
 
-		if (frappe.model.no_value_type.includes(df.fieldtype)) {
+		if (
+			frappe.model.no_value_type.includes(df.fieldtype) &&
+			df.fieldtype !== "Button"
+		) {
 			return false;
 		}
 
@@ -375,13 +377,13 @@ export default class MobileGridRow extends GridRow {
 				)}"
 			>
 				<div class="mobile-grid-card-field-label">
-					${frappe.utils.escape_html(
+					${ df.fieldtype != "Button" ? frappe.utils.escape_html(
 						__(
 							df.label || df.fieldname,
 							null,
 							df.parent
 						)
-					)}
+					): "" }
 
 					${
 						df.reqd
@@ -416,15 +418,82 @@ export default class MobileGridRow extends GridRow {
 			!df.hidden_due_to_dependency &&
 			INLINE_FIELD_TYPES.has(df.fieldtype);
 
-		if (editable) {
-			this.make_mobile_control(column, index);
+		if (df.fieldtype === "Button") {
+			this.make_mobile_button(column);
 		} else {
-			this.render_static_field(column.field_area, df);
-		}
+			const editable =
+				this.grid.is_editable() &&
+				!df.read_only &&
+				!df.hidden_due_to_dependency &&
+				INLINE_FIELD_TYPES.has(df.fieldtype);
 
+			if (editable) {
+				this.make_mobile_control(column, index);
+			} else {
+				this.render_static_field(column.field_area, df);
+			}
+		}
 		this.update_required_state(column, df);
 	}
+	make_mobile_button(column) {
+		const df = column.df;
 
+		const control_df = {
+			...df,
+		};
+		control_df.primary = true
+		const field = frappe.ui.form.make_control({
+			df: control_df,
+			parent: column.field_area,
+			render_input: true,
+			only_input: false,
+			doc: this.doc,
+			doctype: this.doc.doctype,
+			docname: this.doc.name,
+			frm: this.frm,
+			grid: this.grid,
+			grid_row: this,
+		});
+
+		field.doc = this.doc;
+		field.doctype = this.doc.doctype;
+		field.docname = this.doc.name;
+		field.frm = this.frm;
+		field.grid = this.grid;
+		field.grid_row = this;
+
+		this.apply_field_info(field, df);
+
+		field.refresh();
+
+		field.$wrapper?.addClass(
+			"mobile-grid-button-control-wrapper"
+		);
+
+		const $button =
+			field.$input ||
+			field.$wrapper?.find("button").first();
+
+		if ($button?.length) {
+			$button
+				.addClass(
+					"mobile-grid-field-button btn-sm"
+				)
+				.attr(
+					"data-fieldname",
+					df.fieldname
+				)
+				.attr(
+					"data-fieldtype",
+					df.fieldtype
+				);
+		}
+
+		column.field = field;
+
+		this.on_grid_fields_dict[df.fieldname] = field;
+		this.on_grid_fields.push(field);
+	}
 	make_mobile_control(column, index) {
 		const df = column.df;
 
@@ -638,13 +707,16 @@ export default class MobileGridRow extends GridRow {
 				return;
 			}
 
-			const should_be_editable =
-				this.grid.is_editable() &&
-				!df.read_only &&
-				INLINE_FIELD_TYPES.has(df.fieldtype);
+			const should_have_control =
+				df.fieldtype === "Button" ||
+				(
+					this.grid.is_editable() &&
+					!df.read_only &&
+					INLINE_FIELD_TYPES.has(df.fieldtype)
+				);
 
 			if (
-				should_be_editable !==
+				should_have_control !==
 				Boolean(column.field)
 			) {
 				this.render_row();
@@ -707,15 +779,18 @@ export default class MobileGridRow extends GridRow {
 			return;
 		}
 
-		const should_be_editable =
-			this.grid.is_editable() &&
-			!df.read_only &&
-			!df.hidden_due_to_dependency &&
-			INLINE_FIELD_TYPES.has(df.fieldtype);
+		const should_have_control =
+			df.fieldtype === "Button" ||
+			(
+				this.grid.is_editable() &&
+				!df.read_only &&
+				!df.hidden_due_to_dependency &&
+				INLINE_FIELD_TYPES.has(df.fieldtype)
+			);
 
 		if (
-			should_be_editable !==
-				Boolean(column.field)
+			should_have_control !==
+			Boolean(column.field)
 		) {
 			this.render_row();
 			return;
@@ -736,7 +811,9 @@ export default class MobileGridRow extends GridRow {
 			);
 		}
 
-		this.update_required_state(column, df);
+		if (df.fieldtype !== "Button") {
+			this.update_required_state(column, df);
+		}
 
 		if (this.grid_form) {
 			this.grid_form.refresh_field(fieldname);

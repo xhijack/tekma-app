@@ -444,3 +444,24 @@
 	padding-right: 0 !important;
 	padding-left: 0 !important;
 }
+
+.mobile-grid-card-button-field
+	.mobile-grid-card-field-control {
+	width: 100%;
+}
+
+.mobile-grid-button-control-wrapper {
+	width: 100%;
+	margin: 0;
+	padding: 0;
+}
+
+.mobile-grid-button-control-wrapper
+	.control-input-wrapper,
+.mobile-grid-button-control-wrapper
+	.control-input {
+	margin: 0;
+	padding: 0;
+    display: flex;
+    justify-content: end;
+}
