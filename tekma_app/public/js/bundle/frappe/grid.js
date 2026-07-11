@@ -127,8 +127,18 @@ export default class Grid {
 		this.form_grid = this.wrapper.find(".form-grid");
 		//custom
 		if (this.is_mobile_card_grid()) {
-			this.wrapper.addClass("mobile-grid-field");
-			this.form_grid.addClass("mobile-card-grid");
+			this.wrapper.addClass(
+				"mobile-grid-field"
+			);
+
+			this.form_grid.addClass(
+				"mobile-card-grid"
+			);
+
+			this.wrapper.attr(
+				"data-mobile-grid-fieldtype",
+				this.df.fieldtype
+			);
 		}
 		//end custom
 		this.setup_add_row();
@@ -375,7 +385,9 @@ export default class Grid {
 
 			$heading
 				.empty()
-				.addClass("mobile-grid-heading-hidden");
+				.addClass(
+					"mobile-grid-heading-hidden"
+				);
 
 			return;
 		}
@@ -385,7 +397,9 @@ export default class Grid {
 		);
 
 		if (this.header_row) {
-			$heading.find(".grid-row").remove();
+			$heading
+				.find(".grid-row")
+				.remove();
 		}
 
 		this.header_row = new GridRow({
@@ -407,7 +421,9 @@ export default class Grid {
 			show_search: true,
 		});
 
-		this.header_search.row.addClass("filter-row");
+		this.header_search.row.addClass(
+			"filter-row"
+		);
 
 		if (
 			this.header_search.show_search ||
@@ -415,7 +431,9 @@ export default class Grid {
 		) {
 			$heading.addClass("with-filter");
 		} else {
-			$heading.removeClass("with-filter");
+			$heading.removeClass(
+				"with-filter"
+			);
 		}
 
 		if (this.filter_applied) {
@@ -900,12 +918,32 @@ export default class Grid {
 	}
 
 	setup_add_row() {
-		this.wrapper.find(".grid-add-row").click(() => {
-			this.add_new_row(null, null, true, null, true);
-			this.set_focus_on_row();
+		this.wrapper
+			.find(".grid-add-row")
+			.on("click", () => {
+				this.add_new_row(
+					null,
+					null,
+					!this.is_mobile_card_grid(),
+					null,
+					true
+				);
 
-			return false;
-		});
+				this.set_focus_on_row();
+
+				if (
+					this.is_mobile_card_grid()
+				) {
+					const last_row =
+						this.grid_rows
+							?.filter(Boolean)
+							?.slice(-1)[0];
+
+					last_row?.focus_first_input();
+				}
+
+				return false;
+			});
 	}
 
 	add_new_row(idx, callback, show, copy_doc, go_to_last_page = false, go_to_first_page = false) {
@@ -1386,23 +1424,26 @@ export default class Grid {
 			return;
 		}
 
-		const $body = $(this.parent).find(
+		const $body = this.wrapper.find(
 			".grid-body"
 		);
 
-		const $default_empty = $body.find(
-			"> .grid-empty"
-		);
+		const $default_empty =
+			$body.children(".grid-empty");
 
-		let $mobile_empty = $body.find(
-			"> .mobile-grid-empty-card"
-		);
+		let $mobile_empty =
+			$body.children(
+				".mobile-grid-empty-card"
+			);
 
 		if (!$mobile_empty.length) {
 			$mobile_empty = $(`
 				<div class="mobile-grid-empty-card">
 					<div class="mobile-grid-empty-icon">
-						${frappe.utils.icon("list", "lg")}
+						${frappe.utils.icon(
+							"list",
+							"lg"
+						)}
 					</div>
 
 					<div class="mobile-grid-empty-title">
@@ -1410,19 +1451,29 @@ export default class Grid {
 					</div>
 
 					<div class="mobile-grid-empty-description">
-						${__("No data has been added.")}
+						${__(
+							"No data has been added."
+						)}
 					</div>
 
 					${
 						this.is_editable() &&
-						!this.df?.cannot_add_rows
+						!this.df
+							?.cannot_add_rows
 							? `
 								<button
 									type="button"
 									class="btn btn-sm btn-primary mobile-grid-empty-add"
 								>
-									${frappe.utils.icon("add", "xs")}
-									${__("Add Row")}
+									${frappe.utils.icon(
+										"add",
+										"xs"
+									)}
+									<span>
+										${__(
+											"Add Row"
+										)}
+									</span>
 								</button>
 							`
 							: ""
@@ -1431,13 +1482,27 @@ export default class Grid {
 			`).appendTo($body);
 
 			$mobile_empty
-				.find(".mobile-grid-empty-add")
-				.on("click", () => {
-					this.add_new_row();
+				.find(
+					".mobile-grid-empty-add"
+				)
+				.on("click", (event) => {
+					event.preventDefault();
+					event.stopPropagation();
+
+					this.add_new_row(
+						null,
+						null,
+						false,
+						null,
+						true
+					);
+
+					return false;
 				});
 		}
 
-		const has_data = Boolean(this.data?.length);
+		const has_data =
+			Boolean(this.data?.length);
 
 		$mobile_empty.toggleClass(
 			"hidden",
@@ -1447,5 +1512,14 @@ export default class Grid {
 		$default_empty.addClass(
 			"mobile-grid-default-empty-hidden"
 		);
+
+		this.wrapper
+			.find(
+				".grid-footer .grid-add-row"
+			)
+			.toggleClass(
+				"mobile-grid-footer-add-hidden",
+				!has_data
+			);
 	}
 }
