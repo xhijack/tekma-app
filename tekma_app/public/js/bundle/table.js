@@ -1,5 +1,5 @@
 import Grid from "./frappe/grid";
-import { is_mobile_device } from "./frappe/form_mobile_grid_row";
+import { is_mobile_device } from "./mobile_device";
 
 if (is_mobile_device()) {
 	$("body").addClass("mobile-device");

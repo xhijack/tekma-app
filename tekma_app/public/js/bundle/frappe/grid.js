@@ -4,7 +4,8 @@
 import GridRow from "./grid_row";
 import GridPagination from "./grid_pagination";
 
-import MobileGridRow, {is_mobile_device} from "./form_mobile_grid_row";
+import MobileGridRow from "./form_mobile_grid_row";
+import { is_mobile_device } from '../mobile_device'
 
 frappe.ui.form.get_open_grid_form = function () {
 	return $(".grid-row-open").data("grid_row");

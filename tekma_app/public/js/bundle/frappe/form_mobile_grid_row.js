@@ -1,49 +1,3 @@
-let cached_mobile_device;
-
-export function is_mobile_device() {
-	if (cached_mobile_device !== undefined) {
-		return cached_mobile_device;
-	}
-
-	if (typeof navigator === "undefined") {
-		cached_mobile_device = false;
-		return cached_mobile_device;
-	}
-
-	if (typeof navigator.userAgentData?.mobile === "boolean") {
-		cached_mobile_device = navigator.userAgentData.mobile;
-		return cached_mobile_device;
-	}
-
-	const user_agent =
-		navigator.userAgent ||
-		navigator.vendor ||
-		"";
-
-	const mobile_phone =
-		/Android.*Mobile|iPhone|iPod|webOS|BlackBerry|IEMobile|Opera Mini|Windows Phone/i.test(
-			user_agent
-		);
-
-	const android_tablet =
-		/Android/i.test(user_agent) &&
-		!/Mobile/i.test(user_agent);
-
-	const ipad =
-		/iPad/i.test(user_agent) ||
-		(
-			navigator.platform === "MacIntel" &&
-			navigator.maxTouchPoints > 1
-		);
-
-	cached_mobile_device =
-		mobile_phone ||
-		android_tablet ||
-		ipad;
-
-	return cached_mobile_device;
-}
-
 import GridRow from "./grid_row";
 import GridRowForm from "./grid_row_form";
 
@@ -565,6 +519,7 @@ export default class MobileGridRow extends GridRow {
 		this.on_grid_fields.push(field);
 
 		this.decorate_control(field, df, index);
+		this.bind_mobile_focus_scroll(field, column);
 	}
 
 	apply_field_info(field, df) {
@@ -667,6 +622,53 @@ export default class MobileGridRow extends GridRow {
 					is_empty
 			)
 		);
+	}
+
+	bind_mobile_focus_scroll(field, column) {
+		if (!field?.$input?.length) {
+			return;
+		}
+
+		if (
+			["Check", "Button", "Color"].includes(
+				column.df?.fieldtype
+			)
+		) {
+			return;
+		}
+
+		field.$input
+			.off("focusin.mobile-grid-scroll")
+			.on("focusin.mobile-grid-scroll", () => {
+				const element = column.wrapper?.get(0);
+
+				if (!element) {
+					return;
+				}
+
+				const scroll_to_field = () => {
+					const rect = element.getBoundingClientRect();
+					const offset = 110;
+
+					window.scrollTo({
+						top:
+							window.scrollY +
+							rect.top -
+							offset,
+						behavior: "smooth",
+					});
+				};
+
+				setTimeout(scroll_to_field, 250);
+
+				if (window.visualViewport) {
+					window.visualViewport.addEventListener(
+						"resize",
+						scroll_to_field,
+						{ once: true }
+					);
+				}
+			});
 	}
 
 	refresh() {
