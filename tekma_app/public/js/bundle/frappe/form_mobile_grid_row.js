@@ -1,7 +1,6 @@
 import GridRow from "./grid_row";
 import GridRowForm from "./grid_row_form";
 
-
 const INLINE_FIELD_TYPES = new Set([
 	"Data",
 	"Link",
@@ -74,27 +73,77 @@ export default class MobileGridRow extends GridRow {
 			return false;
 		}
 
-		this.reload_doc();
-		this.set_row_index();
-
-		this.row.empty();
-
-		this.columns = {};
-		this.columns_list = [];
-		this.on_grid_fields = [];
-		this.on_grid_fields_dict = {};
-
-		this.render_card_header();
-		this.render_card_body();
-		this.refresh_check();
-
-		this.mobile_fields_signature = this.get_fields_signature();
-
-		if (this.frm && this.doc) {
-			$(this.frm.wrapper).trigger("grid-row-render", [this]);
+		if (this._is_rendering_mobile_row) {
+			return true;
 		}
 
-		return true;
+		this._is_rendering_mobile_row = true;
+
+		try {
+			this.reload_doc();
+			this.set_row_index();
+
+			this.row.empty();
+
+			this.columns = {};
+			this.columns_list = [];
+			this.on_grid_fields = [];
+			this.on_grid_fields_dict = {};
+
+			this.render_card_header();
+			this.render_card_body();
+			this.refresh_check();
+
+			this.mobile_fields_signature =
+				this.get_fields_signature();
+
+			if (this.frm && this.doc) {
+				$(this.frm.wrapper).trigger(
+					"grid-row-render",
+					[this]
+				);
+			}
+
+			return true;
+		} finally {
+			this._is_rendering_mobile_row = false;
+		}
+	}
+
+	schedule_mobile_render() {
+		if (this._mobile_render_scheduled) {
+			return;
+		}
+
+		this._mobile_render_scheduled = true;
+
+		queueMicrotask(() => {
+			this._mobile_render_scheduled = false;
+
+			if (
+				this._is_rendering_mobile_row ||
+				!this.doc ||
+				!this.row
+			) {
+				return;
+			}
+
+			this.render_row();
+		});
+	}
+
+	normalize_property_value(property, value) {
+		if (
+			[
+				"reqd",
+				"hidden",
+				"read_only",
+			].includes(property)
+		) {
+			return value ? 1 : 0;
+		}
+
+		return value;
 	}
 
 	reload_doc() {
@@ -142,7 +191,11 @@ export default class MobileGridRow extends GridRow {
 						title="${__("Edit Full Form")}"
 						aria-label="${__("Edit Full Form")}"
 					>
-						${editable? frappe.utils.icon("edit", "xs"): frappe.utils.icon("view", "xs")}
+						${
+							editable
+								? frappe.utils.icon("edit", "xs")
+								: frappe.utils.icon("view", "xs")
+						}
 					</button>
 
 					${
@@ -331,17 +384,15 @@ export default class MobileGridRow extends GridRow {
 				)}"
 			>
 				<div class="mobile-grid-card-field-label">
-					${ df.fieldtype != "Button" ? frappe.utils.escape_html(
-						__(
-							df.label || df.fieldname,
-							null,
-							df.parent
-						)
-					): "" }
-
 					${
-						df.reqd
-							? '<span class="text-danger">*</span>'
+						df.fieldtype !== "Button"
+							? frappe.utils.escape_html(
+									__(
+										df.label || df.fieldname,
+										null,
+										df.parent
+									)
+								)
 							: ""
 					}
 				</div>
@@ -366,12 +417,6 @@ export default class MobileGridRow extends GridRow {
 		this.columns[df.fieldname] = column;
 		this.columns_list.push(column);
 
-		const editable =
-			this.grid.is_editable() &&
-			!df.read_only &&
-			!df.hidden_due_to_dependency &&
-			INLINE_FIELD_TYPES.has(df.fieldtype);
-
 		if (df.fieldtype === "Button") {
 			this.make_mobile_button(column);
 		} else {
@@ -387,15 +432,18 @@ export default class MobileGridRow extends GridRow {
 				this.render_static_field(column.field_area, df);
 			}
 		}
+
 		this.update_required_state(column, df);
 	}
+
 	make_mobile_button(column) {
 		const df = column.df;
 
 		const control_df = {
 			...df,
+			primary: true,
 		};
-		control_df.primary = true
+
 		const field = frappe.ui.form.make_control({
 			df: control_df,
 			parent: column.field_area,
@@ -448,6 +496,7 @@ export default class MobileGridRow extends GridRow {
 		this.on_grid_fields_dict[df.fieldname] = field;
 		this.on_grid_fields.push(field);
 	}
+
 	make_mobile_control(column, index) {
 		const df = column.df;
 
@@ -613,6 +662,18 @@ export default class MobileGridRow extends GridRow {
 			value === undefined ||
 			value === null ||
 			value === "";
+
+		const $label = column.wrapper.find(
+			".mobile-grid-card-field-label"
+		);
+
+		$label.find(".mobile-grid-required-mark").remove();
+
+		if (df.reqd && df.fieldtype !== "Button") {
+			$label.append(
+				'<span class="text-danger mobile-grid-required-mark">*</span>'
+			);
+		}
 
 		column.wrapper.toggleClass(
 			"mobile-grid-card-field-required",
@@ -884,6 +945,118 @@ export default class MobileGridRow extends GridRow {
 		);
 	}
 
+
+	set_field_property(fieldname, property, value) {
+		const normalized_value =
+			this.normalize_property_value(
+				property,
+				value
+			);
+
+		const docfield = this.docfields?.find(
+			(df) => df?.fieldname === fieldname
+		);
+
+		const column = this.columns?.[fieldname];
+
+		const inline_field =
+			this.on_grid_fields_dict?.[fieldname];
+
+		const form_field =
+			this.grid_form?.fields_dict?.[fieldname];
+
+		const current_value =
+			docfield?.[property] ??
+			column?.df?.[property] ??
+			inline_field?.df?.[property] ??
+			form_field?.df?.[property];
+
+		const normalized_current =
+			this.normalize_property_value(
+				property,
+				current_value
+			);
+
+		if (normalized_current === normalized_value) {
+			return;
+		}
+
+		if (docfield) {
+			docfield[property] = normalized_value;
+		}
+
+		if (column?.df) {
+			column.df[property] = normalized_value;
+		}
+
+		if (inline_field?.df) {
+			inline_field.df[property] =
+				normalized_value;
+		}
+
+		if (form_field?.df) {
+			form_field.df[property] =
+				normalized_value;
+
+			form_field.refresh();
+
+			this.grid_form?.layout?.refresh_sections();
+		}
+
+		if (this._is_rendering_mobile_row) {
+			return;
+		}
+
+		if (
+			property === "hidden" ||
+			property === "read_only"
+		) {
+			this.schedule_mobile_render();
+			return;
+		}
+
+		this.refresh_field(fieldname);
+	}
+
+	toggle_reqd(fieldname, reqd) {
+		this.set_field_property(
+			fieldname,
+			"reqd",
+			reqd ? 1 : 0
+		);
+	}
+
+	toggle_display(fieldname, show) {
+		this.set_field_property(
+			fieldname,
+			"hidden",
+			show ? 0 : 1
+		);
+	}
+
+	toggle_editable(fieldname, editable) {
+		this.set_field_property(
+			fieldname,
+			"read_only",
+			editable ? 0 : 1
+		);
+	}
+
+	toggle_enable(fieldname, enable) {
+		this.toggle_editable(
+			fieldname,
+			enable
+		);
+	}
+
+	toggle_read_only(fieldname, read_only) {
+		this.set_field_property(
+			fieldname,
+			"read_only",
+			read_only ? 1 : 0
+		);
+	}
+
 	toggle_editable_row() {
 		this.focus_first_input();
 		return this;
@@ -918,7 +1091,5 @@ export default class MobileGridRow extends GridRow {
 		}
 	}
 
-	set_arrow_keys() {
-		// Navigasi keyboard desktop tidak digunakan pada card mobile.
-	}
+	set_arrow_keys() {}
 }
