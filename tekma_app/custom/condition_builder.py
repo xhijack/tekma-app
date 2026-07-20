@@ -1,35 +1,11 @@
 import frappe
 
+
 class ConditionBuilder:
-    """
-    SQL WHERE condition builder.
-
-    Example
-    -------
-    builder = (
-        ConditionBuilder()
-        .where("i.is_stock_item = 1")
-        .eq("i.disabled", 0)
-        .in_("i.name", ["ITEM-001", "ITEM-002"])
-        .warehouse("sle.warehouse", "Main Warehouse")
-        .tree(
-            "Item Group",
-            "i.item_group",
-            "Finished Goods",
-            alias="ig",
-        )
-    )
-
-    conditions, params = builder.build()
-    """
 
     def __init__(self):
         self._conditions = []
         self._params = {}
-
-    # ------------------------------------------------------------------
-    # Internal
-    # ------------------------------------------------------------------
 
     @staticmethod
     def _normalize_key(field):
@@ -37,21 +13,33 @@ class ConditionBuilder:
             field.replace(".", "_")
             .replace("`", "")
             .replace(" ", "_")
+            .replace("(", "")
+            .replace(")", "")
+            .replace(",", "_")
             .lower()
         )
 
+    @staticmethod
+    def _normalize_values(values):
+        if values is None or values == "":
+            return []
+
+        if isinstance(values, set):
+            return list(values)
+
+        if isinstance(values, (list, tuple)):
+            return list(values)
+
+        return [values]
+
     def _add(self, condition=None, params=None):
         if condition:
-            self._conditions.append(condition)
+            self._conditions.append(condition.strip())
 
         if params:
             self._params.update(params)
 
         return self
-
-    # ------------------------------------------------------------------
-    # Basic
-    # ------------------------------------------------------------------
 
     def where(self, sql):
         return self._add(sql)
@@ -59,12 +47,8 @@ class ConditionBuilder:
     def raw(self, sql):
         return self._add(sql)
 
-    # ------------------------------------------------------------------
-    # Comparison
-    # ------------------------------------------------------------------
-
     def eq(self, field, value, key=None):
-        if value in (None, ""):
+        if value is None or value == "":
             return self
 
         key = key or self._normalize_key(field)
@@ -75,7 +59,7 @@ class ConditionBuilder:
         )
 
     def ne(self, field, value, key=None):
-        if value in (None, ""):
+        if value is None or value == "":
             return self
 
         key = key or self._normalize_key(field)
@@ -140,18 +124,8 @@ class ConditionBuilder:
             {key: f"%{value}%"},
         )
 
-    # ------------------------------------------------------------------
-    # IN
-    # ------------------------------------------------------------------
-
     def in_(self, field, values, key=None):
-        if values in (None, "", [], (), set()):
-            return self
-
-        if not isinstance(values, (list, tuple, set)):
-            values = [values]
-
-        values = tuple(values)
+        values = self._normalize_values(values)
 
         if not values:
             return self
@@ -160,17 +134,11 @@ class ConditionBuilder:
 
         return self._add(
             f"{field} IN %({key})s",
-            {key: values},
+            {key: tuple(values)},
         )
 
     def not_in(self, field, values, key=None):
-        if values in (None, "", [], (), set()):
-            return self
-
-        if not isinstance(values, (list, tuple, set)):
-            values = [values]
-
-        values = tuple(values)
+        values = self._normalize_values(values)
 
         if not values:
             return self
@@ -179,12 +147,8 @@ class ConditionBuilder:
 
         return self._add(
             f"{field} NOT IN %({key})s",
-            {key: values},
+            {key: tuple(values)},
         )
-
-    # ------------------------------------------------------------------
-    # Between
-    # ------------------------------------------------------------------
 
     def between(self, field, start, end, key=None):
         if not start or not end:
@@ -200,45 +164,62 @@ class ConditionBuilder:
             },
         )
 
-    # ------------------------------------------------------------------
-    # Tree
-    # ------------------------------------------------------------------
+    def tree(self, doctype, field, values, alias=None):
+        values = self._normalize_values(values)
 
-    def tree(self, doctype, field, value, alias=None):
-        if not value:
+        if not values:
             return self
 
-        nodes = frappe.db.get_values(
+        nodes = frappe.get_all(
             doctype,
-            value,
-            ["lft", "rgt"],
-            as_dict=True,
+            filters={
+                "name": ["in", values],
+            },
+            fields=[
+                "name",
+                "lft",
+                "rgt",
+            ],
         )
-        print(nodes, value)
+
         if not nodes:
-            return self
+            return self._add("1 = 0")
+
+        alias = alias or self._normalize_key(doctype)
 
         clauses = []
-        
-        alias = alias or self._normalize_key(doctype)
-        for node in nodes:
-            clauses.append(f"(t.lft >= {node.lft} AND t.rgt <= {node.rgt})")
+        params = {}
+
+        for index, node in enumerate(nodes):
+            lft_key = f"{alias}_lft_{index}"
+            rgt_key = f"{alias}_rgt_{index}"
+
+            clauses.append(
+                f"""
+                (
+                    t.lft >= %({lft_key})s
+                    AND t.rgt <= %({rgt_key})s
+                )
+                """
+            )
+
+            params[lft_key] = node.lft
+            params[rgt_key] = node.rgt
 
         return self._add(
             f"""
             EXISTS (
                 SELECT 1
                 FROM `tab{doctype}` t
-                WHERE (t.name = {field}
-                  AND ({" OR ".join(clauses)}))
+                WHERE
+                    t.name = {field}
+                    AND (
+                        {" OR ".join(clauses)}
+                    )
             )
             """,
-            {}
+            params,
         )
-
-    # ------------------------------------------------------------------
-    # Build
-    # ------------------------------------------------------------------
 
     @property
     def conditions(self):
@@ -249,7 +230,4 @@ class ConditionBuilder:
         return dict(self._params)
 
     def build(self):
-        return (
-            list(self._conditions),
-            dict(self._params),
-        )
+        return self.conditions, self.params

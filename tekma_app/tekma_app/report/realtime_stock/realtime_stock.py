@@ -2,7 +2,7 @@
 # For license information, please see license.txt
 
 
-from tekma_app.custom.stock import get_realtime_stock, get_relatime_and_picked_stock
+from tekma_app.custom.stock import get_realtime_stock, get_realtime_and_picked_stock
 
 def execute(filters=None):
     
@@ -41,7 +41,7 @@ def execute(filters=None):
 
     data = []
     if picked_stock:
-        data = get_relatime_and_picked_stock(filters)
+        data = get_realtime_and_picked_stock(filters)
         columns.append({
             "label": "Picked Qty",
             "fieldname": "picked_qty",
