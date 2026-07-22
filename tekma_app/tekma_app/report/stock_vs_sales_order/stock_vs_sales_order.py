@@ -182,6 +182,9 @@ def execute(filters=None):
             "stock_uom": item.get(
                 "stock_uom"
             ),
+            "weight_per_unit": item.get(
+                "weight_per_unit"
+            ),
             "physical_stock": physical_stock,
             "ready_stock": ready_stock,
             "freezing_stock": freezing_stock,
@@ -248,6 +251,10 @@ def execute(filters=None):
         row.first_shortage_date = (
             first_shortage_date
         )
+    
+        row.weight_balance = flt(row.balance) * flt(row.weight_per_unit)
+        row.weight_physical_stock = flt(row.physical_stock) * flt(row.weight_per_unit)
+        
         if (
             filters.hide_no_order_item
             and total_pending <= 0
@@ -270,8 +277,7 @@ def execute(filters=None):
             total_sales_orders=len(
                 all_sales_orders
             ),
-        ),
-        1,
+        )
     )
 
 def prepare_filters(filters=None):
@@ -447,21 +453,27 @@ def get_columns(dates):
             "width": 75,
         },
         {
-            "label": _("Physical Stock"),
+            "label": _("Total Stock"),
             "fieldname": "physical_stock",
-            "fieldtype": "Float",
+            "fieldtype": "Int",
+            "width": 110,
+        },
+        {
+            "label": _("Weight Total Stock"),
+            "fieldname": "weight_physical_stock",
+            "fieldtype": "Int",
             "width": 110,
         },
         {
             "label": _("Ready Stock"),
             "fieldname": "ready_stock",
-            "fieldtype": "Float",
+            "fieldtype": "Int",
             "width": 105,
         },
         {
             "label": _("Freezing"),
             "fieldname": "freezing_stock",
-            "fieldtype": "Float",
+            "fieldtype": "Int",
             "width": 95,
         },
     ]
@@ -475,7 +487,7 @@ def get_columns(dates):
             "fieldname": get_date_fieldname(
                 delivery_date
             ),
-            "fieldtype": "Float",
+            "fieldtype": "Int",
             "width": 95,
         })
 
@@ -489,19 +501,25 @@ def get_columns(dates):
         {
             "label": _("Total Pending"),
             "fieldname": "total_pending",
-            "fieldtype": "Float",
+            "fieldtype": "Int",
             "width": 115,
         },
         {
             "label": _("Balance"),
             "fieldname": "balance",
-            "fieldtype": "Float",
+            "fieldtype": "Int",
+            "width": 100,
+        },
+        {
+            "label": _("Weight Balance"),
+            "fieldname": "weight_balance",
+            "fieldtype": "Int",
             "width": 100,
         },
         {
             "label": _("Shortage"),
             "fieldname": "shortage_qty",
-            "fieldtype": "Float",
+            "fieldtype": "Int",
             "width": 100,
         },
         {
@@ -666,7 +684,8 @@ def get_report_items(filters):
             i.item_name,
             i.item_group,
             i.stock_uom,
-            i.opname_sort
+            i.opname_sort,
+            i.weight_per_unit
 
         FROM `tabItem` i
 
@@ -722,7 +741,7 @@ def get_stock_summary(
         "disabled_batch": 0,
         "ignore_empty_stock": 1,
 
-        "freeze_days": 2,
+        "freeze_days": filters.freeze_days,
         "as_of_date": filters.from_date,
     })
 

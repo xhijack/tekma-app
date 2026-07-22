@@ -85,7 +85,7 @@ frappe.query_reports["Stock vs Sales Order"] = {
 			fieldtype: "Date",
 			default: frappe.datetime.add_days(
 				frappe.datetime.get_today(),
-				2
+				4
 			),
 			reqd: 1,
 		},
@@ -115,6 +115,13 @@ frappe.query_reports["Stock vs Sales Order"] = {
 					}
 				);
 			},
+		},
+		{
+			fieldname: "freeze_days",
+			label: __("Freeze Days"),
+			fieldtype: "Int",
+			default: 2,
+			reqd: 1,
 		},
 		{
 			fieldname: "hide_no_order_item",
